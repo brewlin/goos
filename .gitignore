@@ -1,0 +1,13 @@
+.vscode
+*.out
+*.o
+main
+# cmake*
+demo
+bin
+.idea
+cmake-build-debug
+test
+build
+*.pyc
+*.si4project
