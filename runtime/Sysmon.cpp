@@ -1,10 +1,13 @@
 #include "Sysmon.h"
 #include <thread>
 #include <sys/signal.h>
+#include "Proc.h"
 vector<pthread_t> Sysmon::_p;
+thread Sysmon::_m;
 void Sysmon::sighandler(int signo)
 {
-    cout << "signal handler" << this_thread::get_id() << endl;
+    regsig();
+    return;
 }
 /**
  * 线程信号处理
@@ -12,8 +15,8 @@ void Sysmon::sighandler(int signo)
  */
 void Sysmon::regsig()
 {
-    _p.emplace_back(pthread_self());
-    sigaction actions;
+//    Sysmon::_p.emplace_back(pthread_self());
+    struct sigaction actions;
     sigemptyset(&actions.sa_mask);
     /* 将参数set信号集初始化并清空 */
     actions.sa_flags = -1;
@@ -23,10 +26,8 @@ void Sysmon::regsig()
 }
 void Sysmon::check()
 {
-    cout << "sys mon run" <<endl;
     for(;;){
         for (pthread_t &id : _p) {
-            this_thread::sleep_for(chrono::seconds(1));
             pthread_kill(id, SIGALRM);
         }
     }
@@ -35,6 +36,7 @@ void Sysmon::check()
 }
 void Sysmon::newm(size_t procn)
 {
+    regsig();
     if(proc != nullptr)throw "sysmon init failed";
     proc = new Proc(procn);
     if(proc == nullptr) throw "proc init failed";

@@ -20,7 +20,7 @@ void Proc::gogo(Context* ctx)
  */
 void Proc::preapre_start()
 {
-    Sysmon::regsig();
+    Sysmon::_p.emplace_back(pthread_self());
     ts_resource(0);
     TSRMLS_CACHE_UPDATE();
     php_request_startup();
