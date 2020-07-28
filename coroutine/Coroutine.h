@@ -14,7 +14,7 @@ using namespace std;
 /**
  * 协程G状态
  */
-enum G_STATUS {Gidle,Grunnable,Gdead};
+enum G_STATUS {Gidle,Grunnable,Preempt,Gdead};
 
 class Coroutine
 {
