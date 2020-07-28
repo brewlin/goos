@@ -2,6 +2,7 @@
 #include "PHPCoroutine.h"
 #include "Coroutine.h"
 #include "ZendFunction.h"
+#include "Sysmon.h"
 Proc *proc;
 
 /**
@@ -19,6 +20,7 @@ void Proc::gogo(Context* ctx)
  */
 void Proc::preapre_start()
 {
+    Sysmon::regsig();
     ts_resource(0);
     TSRMLS_CACHE_UPDATE();
     php_request_startup();

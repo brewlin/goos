@@ -2,6 +2,7 @@
 #include "PHPCoroutine.h"
 #include "php_go.h"
 #include "Proc.h"
+#include "Sysmon.h"
 
 ZEND_BEGIN_ARG_INFO_EX(arg_num, 0, 0, 1)
 ZEND_ARG_INFO(0, num)
@@ -13,16 +14,18 @@ PHP_METHOD(runtime,GOMAXPROCS)
     ZEND_PARSE_PARAMETERS_START(1, 1)
     Z_PARAM_LONG(num)
     ZEND_PARSE_PARAMETERS_END_EX(RETURN_FALSE);
-    if(proc == nullptr){
-        proc = new Proc(num);
-    }
+    Sysmon::newm(num);
+//    if(proc == nullptr){
+//        proc = new Proc(num);
+//    }
 }
 PHP_METHOD(runtime,wait)
 {
     this_thread::sleep_for(chrono::seconds(1));
-    if(proc != nullptr){
-        delete proc;
-    }
+    Sysmon::wait();
+//    if(proc != nullptr){
+//        delete proc;
+//    }
 }
 const zend_function_entry go_runtime_methods[] =
 {

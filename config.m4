@@ -8,16 +8,17 @@ if test "$PHP_GO" != "no"; then
     CFLAGS="-Wall -pthread $CFLAGS"
 
     go_source_file="\
-        go.cpp \
-        wrapper/coroutine.cpp \
-        wrapper/runtime.cpp \
+        go.cpp                   \
+        wrapper/coroutine.cpp    \
+        wrapper/runtime.cpp      \
 
-        coroutine/Coroutine.cpp \
+        coroutine/Coroutine.cpp  \
         coroutine/PHPCoroutine.cpp \
 
-        runtime/Context.cpp \
-        runtime/Proc.cpp \
+        runtime/Context.cpp      \
+        runtime/Proc.cpp         \
         runtime/ZendFunction.cpp \
+        runtime/Sysmon.cpp       \
 
         runtime/asm/jump_context.s \
         runtime/asm/make_context.cpp
