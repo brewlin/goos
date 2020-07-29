@@ -3,8 +3,9 @@
 #include "Coroutine.h"
 #include "ZendFunction.h"
 #include "Sysmon.h"
+#include "QList.h"
 Proc *proc;
-
+vector<M> allm;
 /**
  * 投递一个协程给多个线程调度执行
  * @param ctx
@@ -20,9 +21,10 @@ void Proc::gogo(Context* ctx)
  */
 void Proc::preapre_start()
 {
-    Sysmon::_p.emplace_back(pthread_self());
     ts_resource(0);
     TSRMLS_CACHE_UPDATE();
+    //将线程索引加入到全局M allm队列中
+    allm.put(M m);
     php_request_startup();
 }
 /**
@@ -55,7 +57,6 @@ void Proc::schedule()
             this->tasks.pop();
         }
         Coroutine *co = static_cast<Coroutine *>(ctx->func_data);
-        GO_ZG(_g) = co;
         //当前线程分配到一个未初始化的G
         if(co->gstatus == Gidle) co->newproc();
         //恢复被暂停的G

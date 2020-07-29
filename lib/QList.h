@@ -15,21 +15,32 @@ struct QList{
         Lnode<T> *node = new Lnode<T>(v);
         if(head == nullptr){
             head = node;
+            tail = node;
         }else{
-            node->next = head;
-            head = node;
+            tail->next = node;
+            tail = node;
         }
     }
     bool isEmpty(){return head == nullptr;}
     T pop()
     {
         Lnode<T> *node = head;
-        head = node->next;
-        T r = node->v;
-        delete node;
-        return r;
+        if(head == tail){
+            T r = node->v;
+            delete node;
+            head = nullptr;
+            tail = nullptr;
+            return r;
+        }else{
+
+            head = node->next;
+            T r = node->v;
+            delete node;
+            return r;
+        }
     }
     Lnode<T>* head;
+    Lnode<T>* tail;
 };
 
 #endif //GO_LIST_H

@@ -34,6 +34,10 @@ void Coroutine::yield()
     PHPCoroutine::save_stack(&main_stack);
     restore_stack(stack);
     ctx->swap_out();
+    GO_ZG(_g) = nullptr;
+    //每次切换出去时需要更新tick 和时间
+    GO_ZG(schedwhen) = chrono::steady_clock::now();
+    GO_ZG(schedtick) = 0;
 }
 /**
  * 1.表示当前线程分配到一个未初始化的G
@@ -44,6 +48,11 @@ void Coroutine::newproc()
 {
     ZendFunction::prepare_functions(this);
     PHPCoroutine::save_stack(&main_stack);
+    GO_ZG(_g) = this;
+    //每次切入时出去时需要更新tick 和时间
+    GO_ZG(schedwhen) = chrono::steady_clock::now();
+    GO_ZG(schedtick) += 1;
+
     ctx->swap_in();
     gstatus = Grunnable;
 }
@@ -56,6 +65,11 @@ void Coroutine::resume()
 {
     restore_stack(&main_stack);
     PHPCoroutine::save_stack(stack);
+
+    //每次切入时出去时需要更新tick 和时间
+    GO_ZG(schedwhen) = chrono::steady_clock::now();
+    GO_ZG(schedtick) += 1;
+    GO_ZG(_g) = this;
     ctx->swap_in();
 }
 /**

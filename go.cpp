@@ -19,6 +19,8 @@ static void go_globals_ctor(zend_go_globals *pg)
     pg->pid = 0L;
     pg->signal = 0;
     pg->resources = NULL;
+    pg->schedtick = 0;
+    pg->schedwhen = chrono::steady_clock::now();
 }
 static inline int sapi_cli_deactivate(void)
 {

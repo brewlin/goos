@@ -23,7 +23,7 @@
 #include <iostream>
 using namespace std;
 
-
+using timep = chrono::steady_clock::time_point;
 extern zend_module_entry go_module_entry;
 extern zend_class_entry *go_coroutine_ce_ptr;
 
@@ -38,6 +38,9 @@ ZEND_BEGIN_MODULE_GLOBALS(go)
     pid_t       pid;
     int         signal;
     void***     local;
+    //执行抢占标记检测
+    timep       schedwhen;
+    int         schedtick;
     zval        _this;
     Coroutine*  _g;
     HashTable   resolve;

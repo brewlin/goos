@@ -1,4 +1,9 @@
 # goos
+<p>
+<a href="https://github.com/brewlin/goos/issues"><img alt="GitHub issues" src="https://img.shields.io/github/issues/brewlin/goos"></a>
+ <a href="https://github.com/brewlin/goos/network"><img alt="GitHub forks" src="https://img.shields.io/github/forks/brewlin/goos"></a>
+ <a href="https://github.com/brewlin/goos/blob/master/LICENSE"><img alt="GitHub license" src="https://img.shields.io/github/license/brewlin/goos"></a>
+ </p>
 GPM 多线程协程调度器 for PHP Extension
 
 ## config & install
