@@ -24,7 +24,8 @@ void Proc::preapre_start()
     ts_resource(0);
     TSRMLS_CACHE_UPDATE();
     //将线程索引加入到全局M allm队列中
-    allm.put(M m);
+    M m;
+    allm.emplace_back(m);
     php_request_startup();
 }
 /**
@@ -43,28 +44,42 @@ void Proc::prepare_shutdown()
 void Proc::schedule()
 {
     for(;;){
-        Context* ctx;
+        Context*   ctx;
+        Coroutine* co;
+        Runq *rq = static_cast<Runq *>(GO_ZG(rq));
         {
             unique_lock<mutex> lock(this->queue_mu);
-            this->cond.wait(lock,[this]{
-                return this->stop || !this->tasks.empty();
+            this->cond.wait(lock,[this,rq]{
+                return this->stop || !this->tasks.empty() || !rq->q->isEmpty();
             });
 
-            if(this->stop && this->tasks.empty())
+            if(this->stop && this->tasks.empty() && rq->q->isEmpty())
                 break;
 
-            ctx = move(this->tasks.front());
-            this->tasks.pop();
+            if(!this->tasks.empty()){
+                ctx = move(this->tasks.front());
+                this->tasks.pop();
+                co = static_cast<Coroutine *>(ctx->func_data);
+            }else{
+                co = rq->q->pop();
+            }
         }
-        Coroutine *co = static_cast<Coroutine *>(ctx->func_data);
+        if(co == nullptr){
+            continue;
+        }
         //当前线程分配到一个未初始化的G
         if(co->gstatus == Gidle) co->newproc();
         //恢复被暂停的G
         else co->resume();
         //G运行结束 销毁栈
-        if(ctx->is_end) co->close();
+        if(ctx->is_end) {
+            co->close();
+        }
         //G被切出来，重新进行调度
-        else GO_ZG(rq)->q->put(co);
+        else {
+            cout << "被切出来了，重新加入";
+            GO_ZG(rq)->q->put(co);
+        }
         //处理切出来的协程
         //TODO :因为实际被让出的协程可能由网络或者时间触发，这里先模拟处理被切出来的协程G
         //实际情况应该有其他如POLLER、timer 等来恢复该协程
@@ -86,6 +101,9 @@ void Proc::runqget()
         co->resume();
         if(co->ctx->is_end){
             co->close();
+        }else{
+            rq->q->put(co);
+            break;
         }
     }
 }

@@ -3,22 +3,14 @@
 #include <sys/signal.h>
 #include "Proc.h"
 #include "Coroutine.h"
-vector<pthread_t> Sysmon::_p;
 thread Sysmon::_m;
 
-void Sysmon::preemptPark()
-{
-    cout << "重新调度" << endl;
-    if(GO_ZG(_g) != nullptr){
-        GO_ZG(_g)->yield();
-    }
-
-}
 void Sysmon::sighandler(int signo)
 {
-    cout << "sighandler: "<< this_thread::get_id() <<endl;
     regsig();
-    preemptPark();
+    if(GO_ZG(_g) != nullptr){
+        GO_ZG(_g)->stackpreempt();
+    }
     return;
 }
 /**
@@ -35,10 +27,22 @@ void Sysmon::regsig()
     /* 设置SIGALRM的处理函数 */
     sigaction(SIGURG,&actions,NULL);
 }
+void Sysmon::preemptPark(M *m)
+{
+    cout << "开始标记 :" << GO_FETCH(m->_m,_g) <<endl;
+    //同步两边状态
+    m->tick = 0;
+    GO_FETCH(m->_m,schedtick) = 0;
+    if(GO_FETCH(m->_m,_g) != nullptr){
+        pthread_kill(m->tid, SIGURG);
+    }
+
+}
 void Sysmon::preemptM(M *m)
 {
     //检查周期是否一致
     if(m->tick != GO_FETCH(m->_m,schedtick)){
+        cout << "周期不一致 " <<endl;
         //说明周期不一致，更新当前周期
         m->tick = GO_FETCH(m->_m,schedtick);
         return;
@@ -47,21 +51,20 @@ void Sysmon::preemptM(M *m)
     auto prev = GO_FETCH(m->_m,schedwhen);
     auto now  = chrono::steady_clock::now();
     int timeout = chrono::duration<double,std::milli>(now-prev).count();
+    cout << "占有时间:" << timeout <<endl;
     //如果大于10ms 则需要执行抢占
     if(timeout > 10){
-        preemptPark()
-//            pthread_kill(id, SIGURG);
+        preemptPark(m);
+    }else{
+//        m->tick ++;
     }
-
-
 }
 void Sysmon::check()
 {
     for(;;){
-        this_thread::sleep_for(chrono::milliseconds(100));
+        this_thread::sleep_for(chrono::milliseconds(1));
         for(M &m : allm){
             preemptM(&m);
-//            pthread_kill(id, SIGURG);
         }
     }
     //end the proc

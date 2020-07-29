@@ -34,6 +34,7 @@ public:
     void yield();
     void resume();
     void restore_stack(php_sp *sp);
+    void stackpreempt();
 
 };
 /**

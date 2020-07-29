@@ -15,8 +15,8 @@ public:
     static void wait();
 //    bool retake();
     static void newm(size_t proc);
-    bool preemptM(M *m);
-    static void preemptPark();
+    static void preemptM(M *m);
+    static void preemptPark(M *m);
 
 public:
     static thread _m;

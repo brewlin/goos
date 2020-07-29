@@ -38,11 +38,11 @@ public:
     void                prepare_shutdown();
     static void         free_func();
     void                runqget();
+    condition_variable  cond;
 private:
     vector<thread>      workers;
     queue<Context *>    tasks;
     mutex queue_mu;
-    condition_variable  cond;
     bool stop;
 
 };
