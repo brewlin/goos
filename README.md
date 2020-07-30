@@ -9,7 +9,11 @@ GPM 多线程协程调度器 for PHP Extension
 ## config & install
 ```asciidoc
 # 编译php必须加上 ZTS支持
-> ./configure --prefix=/path/to/  --enable-cli --with-config-file-path=/path/to/etc --sysconfdir=/path/to/etc --enable-maintainer-zts
+> wget https://www.php.net/distributions/php-7.3.5.tar.gz
+> tar zxvf php-7.3.5.tar.gz & cd php-7.3.5
+> ./configure --prefix=/path/to/  --enable-cli --with-config-file-path=/path/to/etc 
+--sysconfdir=/path/to/etc --enable-maintainer-zts
+
 # 编译扩展
 > cd /path/to/goos
 > php7.3.5-ize
