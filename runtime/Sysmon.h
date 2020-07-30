@@ -11,9 +11,8 @@ class Sysmon
 public:
     static void sighandler(int signo);
     static void regsig();
-    static void check();
+    static void monitor();
     static void wait();
-//    bool retake();
     static void newm(size_t proc);
     static void preemptM(M *m);
     static void preemptPark(M *m);

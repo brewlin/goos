@@ -15,17 +15,12 @@ PHP_METHOD(runtime,GOMAXPROCS)
     Z_PARAM_LONG(num)
     ZEND_PARSE_PARAMETERS_END_EX(RETURN_FALSE);
     Sysmon::newm(num);
-//    if(proc == nullptr){
-//        proc = new Proc(num);
-//    }
 }
 PHP_METHOD(runtime,wait)
 {
     this_thread::sleep_for(chrono::seconds(1));
     Sysmon::wait();
-//    if(proc != nullptr){
-//        delete proc;
-//    }
+    Proc::free_func();
 }
 const zend_function_entry go_runtime_methods[] =
 {

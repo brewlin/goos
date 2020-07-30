@@ -1,4 +1,6 @@
 #include "Context.h"
+#include "php_go.h"
+#include "Coroutine.h"
 /**
  * 创建c栈
  * @param func
@@ -18,6 +20,7 @@ void Context::context_run(void *arg)
     Context *_this = static_cast<Context *>(arg);
     _this->_fn(_this->func_data);
     _this->is_end = true;
+    GO_ZG(_g) = nullptr;
     _this->swap_out();
 }
 /**
@@ -25,6 +28,13 @@ void Context::context_run(void *arg)
  */
 void Context::swap_in()
 {
+//    Coroutine *co = static_cast<Coroutine*>(this->func_data);
+//    GO_ZG(_g) =  co;
+//    每次切入时出去时需要更新tick 和时间
+//    GO_ZG(schedwhen) = chrono::steady_clock::now();
+//    GO_ZG(schedtick) += 1;
+//    co->gstatus = Grunnable;
+
     jump_context(&old_ctx,&cur_ctx);
 }
 /**
@@ -32,6 +42,11 @@ void Context::swap_in()
  */
 void Context::swap_out()
 {
+//    GO_ZG(_g) = nullptr;
+//    每次切换出去时需要更新tick 和时间
+//    GO_ZG(schedwhen) = chrono::steady_clock::now();
+//    GO_ZG(schedtick) = 0;
+
     jump_context(&cur_ctx,&old_ctx);
 }
 /**

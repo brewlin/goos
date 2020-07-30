@@ -39,7 +39,6 @@ return SUCCESS;
 }
 PHP_MSHUTDOWN_FUNCTION(go)
 {
-    cout << "main shutdown" << endl;
     return SUCCESS;
 }
 PHP_RINIT_FUNCTION(go)

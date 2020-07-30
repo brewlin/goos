@@ -33,10 +33,10 @@ void Coroutine::yield()
 {
     PHPCoroutine::save_stack(&main_stack);
     restore_stack(stack);
-    GO_ZG(_g) = nullptr;
+//    GO_ZG(_g) = nullptr;
     //每次切换出去时需要更新tick 和时间
-    GO_ZG(schedwhen) = chrono::steady_clock::now();
-    GO_ZG(schedtick) = 0;
+//    GO_ZG(schedwhen) = chrono::steady_clock::now();
+//    GO_ZG(schedtick) = 0;
     ctx->swap_out();
 }
 /**
@@ -48,7 +48,7 @@ void Coroutine::newproc()
 {
     ZendFunction::prepare_functions(this);
     PHPCoroutine::save_stack(&main_stack);
-    GO_ZG(_g) = this;
+    GO_ZG(_g) =  this;
     //每次切入时出去时需要更新tick 和时间
     GO_ZG(schedwhen) = chrono::steady_clock::now();
     GO_ZG(schedtick) += 1;
@@ -64,16 +64,15 @@ void Coroutine::resume()
 {
     restore_stack(&main_stack);
     PHPCoroutine::save_stack(stack);
-
+    GO_ZG(_g) =  this;
     //每次切入时出去时需要更新tick 和时间
     GO_ZG(schedwhen) = chrono::steady_clock::now();
     GO_ZG(schedtick) += 1;
-    GO_ZG(_g) = this;
+    gstatus = Grunnable;
     ctx->swap_in();
 }
 void Coroutine::stackpreempt()
 {
-    cout << "抢占准备跳出:" <<this<<" : " << this->ctx << ":"<< this->ctx->is_end<<endl;
     gstatus = Preempt;
     yield();
 
