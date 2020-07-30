@@ -72,10 +72,11 @@ void Sysmon::preemptM(M *m)
  */
 void Sysmon::monitor()
 {
-    int pn = allm.size();
+    int pn = 0;
     int bmaxnum = 0;
 
     for(;;){
+        pn = allm.size();
         this_thread::sleep_for(chrono::milliseconds(1));
         int total_n = 0;
         for(M &m : allm){

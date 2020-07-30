@@ -33,10 +33,10 @@ void Coroutine::yield()
 {
     PHPCoroutine::save_stack(&main_stack);
     restore_stack(stack);
-//    GO_ZG(_g) = nullptr;
+    GO_ZG(_g) = nullptr;
     //每次切换出去时需要更新tick 和时间
-//    GO_ZG(schedwhen) = chrono::steady_clock::now();
-//    GO_ZG(schedtick) = 0;
+    GO_ZG(schedwhen) = chrono::steady_clock::now();
+    GO_ZG(schedtick) = 0;
     ctx->swap_out();
 }
 /**
