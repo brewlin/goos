@@ -2,7 +2,16 @@
 #include "ZendFunction.h"
 #include "Coroutine.h"
 
-ZendFunction::ZendFunction(zend_function *func,zval *argv,uint32_t argc):argv(argv),argc(argc)
+void ZendFunction::freehash(zval *zval_ptr)
+{
+
+//    if(Z_TYPE_P(zval_ptr) == IS_NULL){
+//        cout << "该变量为 null" <<endl;
+//        return;
+//    }
+    zval_ptr_dtor(zval_ptr);
+}
+ZendFunction::ZendFunction(zend_function *func,zval *argv,uint32_t argc):argv(argv),argc(argc),is_new(1)
 {
     arena_checkpoint = zend_arena_checkpoint(CG(arena));;
     this->func = copy_function(func);
@@ -10,16 +19,16 @@ ZendFunction::ZendFunction(zend_function *func,zval *argv,uint32_t argc):argv(ar
 ZendFunction::~ZendFunction()
 {
     zend_op_array *op = &func->op_array;
-    efree(op->literals);
-    efree(op->refcount);
-    efree(op->vars);
-    efree(op->opcodes);
-    efree(op->live_range);
-    zend_string_release(op->function_name);
     if(op->static_variables != nullptr){
         zend_hash_destroy(op->static_variables);
-        FREE_HASHTABLE(op->static_variables);
+//        FREE_HASHTABLE(op->static_variables);
+//        free(op->static_variables);
     }
+    free(op->literals);
+    free(op->refcount);
+    free(op->vars);
+    free(op->opcodes);
+    free(op->live_range);
 //    zend_arena_release(&CG(arena),arena_checkpoint);
 }
 void ZendFunction::prepare_functions(Coroutine *co) {
@@ -33,7 +42,6 @@ void ZendFunction::prepare_functions(Coroutine *co) {
             continue;
         name = zend_string_new(key);
         prepared = copy_function((zend_function*)value);
-
         if (!zend_hash_add_ptr(CG(function_table), name, prepared)) {
             destroy_op_array((zend_op_array*)prepared);
         }
@@ -69,8 +77,8 @@ zend_function* ZendFunction::copy_user_function(zend_function *function)
     zend_string   **variables, *filename_copy;
     zval           *literals;
     zend_arg_info  *arg_info;
-    copy = (zend_function*)
-        zend_arena_alloc(&CG(arena), sizeof(zend_op_array));
+    if(is_new) copy = (zend_function*)malloc(sizeof(zend_op_array));
+    else       copy = (zend_function*) zend_arena_alloc(&CG(arena), sizeof(zend_op_array));
     memcpy(copy, function, sizeof(zend_op_array));
 
     op_array = &copy->op_array;
@@ -81,7 +89,10 @@ zend_function* ZendFunction::copy_user_function(zend_function *function)
     op_array->function_name = zend_string_new(op_array->function_name);
     /* we don't care about prototypes */
     op_array->prototype = NULL;
-    op_array->refcount = (uint32_t*)emalloc(sizeof(uint32_t));
+
+    if(is_new) op_array->refcount = (uint32_t*)malloc(sizeof(uint32_t));
+    else op_array->refcount = (uint32_t*)emalloc(sizeof(uint32_t));
+
     (*op_array->refcount) = 1;
     /* we never want to share the same runtime cache */
     op_array->run_time_cache = NULL;
@@ -112,7 +123,10 @@ zend_function* ZendFunction::copy_user_function(zend_function *function)
     return copy;
 }
 zval* ZendFunction::copy_literals(zval *old, int last) {
-    zval *literals = (zval*) safe_emalloc(last, sizeof(zval), 0);
+    zval *literals;
+    if(is_new) literals = (zval*) calloc(last, sizeof(zval));
+    else literals = (zval*) safe_emalloc(last, sizeof(zval), 0);
+
     zval *literal = literals,
         *end = literals + last;
 
@@ -142,11 +156,12 @@ HashTable* ZendFunction::copy_statics(HashTable *old) {
     if (old) {
         zend_string *key;
         zval *value;
-
-        ALLOC_HASHTABLE(statics);
+        if(is_new) statics = (HashTable *) malloc(sizeof(HashTable));
+        else ALLOC_HASHTABLE(statics);
+        cout << "hashtable addr:"<<statics <<" " << this_thread::get_id << endl;
         zend_hash_init(statics,
                        zend_hash_num_elements(old),
-                       NULL, ZVAL_PTR_DTOR, 0);
+                       NULL, freehash, is_new);
 
         ZEND_HASH_FOREACH_STR_KEY_VAL(old, key, value) {
             zend_string *name = zend_string_new(key);
@@ -191,20 +206,22 @@ HashTable* ZendFunction::copy_statics(HashTable *old) {
     return statics;
 }
 zend_string** ZendFunction::copy_variables(zend_string **old, int end) {
-    zend_string **variables = (zend_string** )safe_emalloc(end, sizeof(zend_string*), 0);
+    zend_string **variables;
+    if(is_new) variables = (zend_string** )calloc(end, sizeof(zend_string*));
+    else variables = (zend_string** )safe_emalloc(end, sizeof(zend_string*), 0);
     int it = 0;
 
     while (it < end) {
-        variables[it] =
-            zend_string_new(old[it]);
+        variables[it] = zend_string_new(old[it]);
         it++;
     }
 
     return variables;
 }
 zend_try_catch_element* ZendFunction::copy_try(zend_try_catch_element *old, int end) {
-    zend_try_catch_element *try_catch = (zend_try_catch_element *)safe_emalloc(end, sizeof(zend_try_catch_element), 0);
-
+    zend_try_catch_element *try_catch;
+    if(is_new) try_catch = (zend_try_catch_element *)calloc(end, sizeof(zend_try_catch_element));
+    else try_catch = (zend_try_catch_element *)safe_emalloc(end, sizeof(zend_try_catch_element), 0);
     memcpy(
         try_catch,
         old,
@@ -213,7 +230,9 @@ zend_try_catch_element* ZendFunction::copy_try(zend_try_catch_element *old, int 
     return try_catch;
 }
 zend_live_range* ZendFunction::copy_live(zend_live_range *old, int end) {
-    zend_live_range *range = (zend_live_range *)safe_emalloc(end, sizeof(zend_live_range), 0);
+    zend_live_range *range;
+    if(is_new) range = (zend_live_range *)calloc(end, sizeof(zend_live_range));
+    else range = (zend_live_range *)safe_emalloc(end, sizeof(zend_live_range), 0);
     memcpy(
         range,
         old,
@@ -235,7 +254,8 @@ zend_arg_info* ZendFunction::copy_arginfo(zend_op_array *op_array, zend_arg_info
         end++;
     }
 
-    info = (zend_arg_info *)safe_emalloc(end, sizeof(zend_arg_info), 0);
+    if(is_new) info = (zend_arg_info *)calloc(end, sizeof(zend_arg_info));
+    else info = (zend_arg_info *)safe_emalloc(end, sizeof(zend_arg_info), 0);
     memcpy(info, old, sizeof(zend_arg_info) * end);
 
     while (it < end) {
@@ -260,11 +280,13 @@ zend_arg_info* ZendFunction::copy_arginfo(zend_op_array *op_array, zend_arg_info
 
 zend_op* ZendFunction::copy_opcodes(zend_op_array *op_array, zval *literals)
 {
-    zend_op *copy = (zend_op*)safe_emalloc(op_array->last, sizeof(zend_op), 0);
+    zend_op *copy;
+    if(is_new) copy = (zend_op*)calloc(op_array->last, sizeof(zend_op));
+    else copy = (zend_op*)safe_emalloc(op_array->last, sizeof(zend_op), 0);
 
     memcpy(copy, op_array->opcodes, sizeof(zend_op) * op_array->last);
 
-    /* The following code comes from ext/opcache/zend_persist.c */
+    /* The following code comes from ext/opcache/zend_persft.c */
     zend_op *opline = copy;
     zend_op *end    = copy + op_array->last;
 

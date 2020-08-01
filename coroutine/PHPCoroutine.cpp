@@ -105,7 +105,8 @@ void PHPCoroutine::run(void *args)
  */
 void PHPCoroutine::recycle_func(Coroutine* co)
 {
-    Freeq *free = static_cast<Freeq*>(GO_FETCH(co->creator,q));
+//    Freeq *free = static_cast<Freeq*>(GO_FETCH(co->creator,q));
+    Freeq *free = static_cast<Freeq*>(GO_ZG(q));
     lock_guard<mutex> lock(free->gofq_lock);
     free->func_list->put(co->callback);
 }

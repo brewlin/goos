@@ -46,7 +46,8 @@ void Coroutine::yield()
  */
 void Coroutine::newproc()
 {
-    ZendFunction::prepare_functions(this);
+    callback->is_new = 0;
+    callback->prepare_functions(this);
     PHPCoroutine::save_stack(&main_stack);
     GO_ZG(_g) =  this;
     //每次切入时出去时需要更新tick 和时间

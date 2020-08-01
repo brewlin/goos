@@ -33,6 +33,21 @@ void Proc::preapre_start()
  */
 void Proc::prepare_shutdown()
 {
+    zend_string *key;
+    void *value = NULL;
+//    ZEND_HASH_REVERSE_FOREACH_STR_KEY_VAL(EG(function_table), key, zv) {
+//        zend_function *func = (zend_function*)Z_PTR_P(zv);
+//        if (func->type == ZEND_INTERNAL_FUNCTION) {
+//            continue;
+//        }
+//        cout << "全局函数名:" << key->val << " " << &func->op_array << endl;
+//    } ZEND_HASH_FOREACH_END_DEL();
+//    ZEND_HASH_FOREACH_STR_KEY_PTR(CG(function_table), key, value)
+//    {
+//        cout << "全局函数名:" << key->val << " " << value << endl;
+//
+//    }
+//    ZEND_HASH_FOREACH_END();
     php_request_shutdown((void*)NULL);
     PG(report_memleaks) = 0;
     ts_free_thread();
