@@ -12,7 +12,8 @@ thread Sysmon::_m;
 void Sysmon::sighandler(int signo)
 {
     regsig();
-    if(GO_ZG(_g) != nullptr){
+    Coroutine *co = GO_ZG(_g);
+    if(co != nullptr && co->gstatus == Grunnable){
         GO_ZG(_g)->stackpreempt();
     }
     return;
@@ -40,7 +41,8 @@ void Sysmon::preemptPark(M *m)
     //同步两边状态
     m->tick = 0;
     GO_FETCH(m->_m,schedtick) = 0;
-    if(GO_FETCH(m->_m,_g) != nullptr){
+    Coroutine *co  = GO_FETCH(m->_m,_g);
+    if(co != nullptr && co->gstatus == Grunnable){
         pthread_kill(m->tid, SIGURG);
     }
 
@@ -62,7 +64,7 @@ void Sysmon::preemptM(M *m)
     auto now  = chrono::steady_clock::now();
     int timeout = chrono::duration<double,std::milli>(now-prev).count();
     //如果大于10ms 则需要执行抢占
-    if(timeout > 10) preemptPark(m);
+    if(timeout > 20) preemptPark(m);
 //    }else{
 //        m->tick ++;
 //    }
@@ -72,19 +74,29 @@ void Sysmon::preemptM(M *m)
  */
 void Sysmon::monitor()
 {
+    while (proc->threads != proc->start_threads){
+        this_thread::sleep_for(chrono::milliseconds(1));
+    }
     int pn = 0;
     int bmaxnum = 0;
-
     for(;;){
         pn = allm.size();
-        this_thread::sleep_for(chrono::milliseconds(1));
+        this_thread::sleep_for(chrono::milliseconds(5));
         int total_n = 0;
+        auto now = proc->now;
         for(M &m : allm){
-            if(GO_FETCH(m._m,_g) != nullptr)
+//            cout << "monitor:"  << GO_FETCH(m._m,_g) <<" tasks:" << proc->tasks.empty() << " "
+//            << proc->tasks.size() << endl;
+            if(GO_FETCH(m._m,_g) != nullptr){
                 preemptM(&m);
-            else total_n ++;
+            }else if(proc->tasks.empty()){
+                total_n ++;
+            }
         }
-        if(total_n == pn )bmaxnum ++;
+        double equal = chrono::duration<double,std::milli>(proc->now-now).count();
+        //在此次检查线程期间是否 proc->task已更新，如果更新了就不计数
+        if(now == proc->now && total_n == pn)
+            bmaxnum ++;
         if(bmaxnum >= 5)break;
     }
     //end the proc

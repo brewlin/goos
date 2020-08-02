@@ -61,6 +61,8 @@ ZEND_END_MODULE_GLOBALS(go)
 # if defined(ZTS) && defined(COMPILE_DL_GO)
 ZEND_TSRMLS_CACHE_EXTERN()
 # endif
+#define likely(x)        __builtin_expect(!!(x), 1)
+#define unlikely(x)      __builtin_expect(!!(x), 0)
 
 static zend_string *zend_string_new(zend_string *s)
 {

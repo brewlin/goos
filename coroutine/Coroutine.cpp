@@ -34,6 +34,7 @@ void Coroutine::yield()
     PHPCoroutine::save_stack(&main_stack);
     restore_stack(stack);
     GO_ZG(_g) = nullptr;
+    gstatus = Gdead;
     //每次切换出去时需要更新tick 和时间
     GO_ZG(schedwhen) = chrono::steady_clock::now();
     GO_ZG(schedtick) = 0;
@@ -74,7 +75,7 @@ void Coroutine::resume()
 }
 void Coroutine::stackpreempt()
 {
-    gstatus = Preempt;
+//    gstatus = Preempt;
     yield();
 
 }
@@ -83,6 +84,7 @@ void Coroutine::stackpreempt()
  * @param sp
  */
 void Coroutine::restore_stack(php_sp *sp) {
+    if(sp == nullptr)return;
     EG(vm_stack_top) = sp->vm_stack_top;
     EG(vm_stack_end) = sp->vm_stack_end;
     EG(vm_stack) = sp->vm_stack;

@@ -13,6 +13,7 @@ vector<M> allm;
 void Proc::gogo(Context* ctx)
 {
     unique_lock<mutex> lock(queue_mu);
+    now = chrono::steady_clock::now();
     this->tasks.emplace(ctx);
     cond.notify_one();
 }
@@ -21,6 +22,7 @@ void Proc::gogo(Context* ctx)
  */
 void Proc::preapre_start()
 {
+    start_threads ++;
     ts_resource(0);
     TSRMLS_CACHE_UPDATE();
     //将线程索引加入到全局M allm队列中
@@ -122,7 +124,7 @@ void Proc::runqget()
  * 初始化创建固定数量的线程
  * @param threads
  */
-Proc::Proc(size_t threads):stop(false)
+Proc::Proc(size_t threads):stop(false),threads(threads)
 {
     for(size_t i = 0; i < threads ; i ++){
         workers.emplace_back([this,i]

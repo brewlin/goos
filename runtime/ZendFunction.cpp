@@ -1,6 +1,7 @@
 
 #include "ZendFunction.h"
 #include "Coroutine.h"
+#include "ZendString.h"
 
 void ZendFunction::freehash(zval *zval_ptr)
 {
@@ -29,6 +30,7 @@ ZendFunction::~ZendFunction()
     free(op->vars);
     free(op->opcodes);
     free(op->live_range);
+    zend_string_release(op->function_name);
 //    zend_arena_release(&CG(arena),arena_checkpoint);
 }
 void ZendFunction::prepare_functions(Coroutine *co) {
@@ -86,7 +88,8 @@ zend_function* ZendFunction::copy_user_function(zend_function *function)
     literals = op_array->literals;
     arg_info = op_array->arg_info;
 
-    op_array->function_name = zend_string_new(op_array->function_name);
+//    op_array->function_name = zend_string_new(op_array->function_name);
+    op_array->function_name = ZendString::copy_string(op_array->function_name,is_new);
     /* we don't care about prototypes */
     op_array->prototype = NULL;
 
@@ -158,7 +161,6 @@ HashTable* ZendFunction::copy_statics(HashTable *old) {
         zval *value;
         if(is_new) statics = (HashTable *) malloc(sizeof(HashTable));
         else ALLOC_HASHTABLE(statics);
-        cout << "hashtable addr:"<<statics <<" " << this_thread::get_id << endl;
         zend_hash_init(statics,
                        zend_hash_num_elements(old),
                        NULL, freehash, is_new);

@@ -87,6 +87,11 @@ void PHPCoroutine::run(void *args)
     sp->co = co;
     co->stack = sp;
 
+    GO_ZG(_g) =  co;
+    //每次切入时出去时需要更新tick 和时间
+    GO_ZG(schedwhen) = chrono::steady_clock::now();
+    GO_ZG(schedtick) += 1;
+    co->gstatus = Grunnable;
     //把当前协程栈信息保存到task里面
     if(func->type == ZEND_USER_FUNCTION){
         ZVAL_UNDEF(retval);
@@ -94,6 +99,8 @@ void PHPCoroutine::run(void *args)
         zend_init_func_execute_data(call,&func->op_array,retval);
         zend_execute_ex(EG(current_execute_data));
     }
+    co->gstatus = Gdead;
+    GO_ZG(_g) = nullptr;
     //将当前协程func 挂到该创建线程上的待回收队列去
     recycle_func(co);
     zval_ptr_dtor(retval);

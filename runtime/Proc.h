@@ -7,9 +7,10 @@
 #include "Context.h"
 #include <condition_variable>
 #include "php_go.h"
+#include <chrono>
 using namespace std;
 
-
+typedef chrono::time_point<chrono::steady_clock> time_point;
 /**
  * M
  */
@@ -38,10 +39,14 @@ public:
     void                prepare_shutdown();
     static void         free_func();
     void                runqget();
+public:
+    size_t              threads;
+    size_t              start_threads = 0;
     condition_variable  cond;
+    queue<Context *>    tasks;
+    time_point          now;
 private:
     vector<thread>      workers;
-    queue<Context *>    tasks;
     mutex queue_mu;
     bool stop;
 
