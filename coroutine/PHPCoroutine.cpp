@@ -101,21 +101,9 @@ void PHPCoroutine::run(void *args)
     }
     co->gstatus = Gdead;
     GO_ZG(_g) = nullptr;
-    //将当前协程func 挂到该创建线程上的待回收队列去
-    recycle_func(co);
+    //释放co
+    delete co->callback;
     zval_ptr_dtor(retval);
-}
-/**
- * 需要找到对应 协程创建的原始线程，并把它挂到该待回收
- * 的队列上去，等待每次调度的时候释放该内存
- * @param co
- */
-void PHPCoroutine::recycle_func(Coroutine* co)
-{
-//    Freeq *free = static_cast<Freeq*>(GO_FETCH(co->creator,q));
-    Freeq *free = static_cast<Freeq*>(GO_ZG(q));
-    lock_guard<mutex> lock(free->gofq_lock);
-    free->func_list->put(co->callback);
 }
 
 

@@ -27,10 +27,19 @@ ZendFunction::~ZendFunction()
     }
     free(op->literals);
     free(op->refcount);
-    free(op->vars);
     free(op->opcodes);
     free(op->live_range);
-    zend_string_release(op->function_name);
+    ZendString::free_string(op->function_name);
+
+    zend_string   **variables = op->vars;
+    int end = op->last_var;
+    int it = 0;
+    while (it < end) {
+        ZendString::free_string(variables[it]);
+        it++;
+    }
+    free(op->vars);
+    free(op);
 //    zend_arena_release(&CG(arena),arena_checkpoint);
 }
 void ZendFunction::prepare_functions(Coroutine *co) {
@@ -214,7 +223,9 @@ zend_string** ZendFunction::copy_variables(zend_string **old, int end) {
     int it = 0;
 
     while (it < end) {
-        variables[it] = zend_string_new(old[it]);
+        if(is_new)        variables[it]  = ZendString::copy_string(old[it],is_new);
+        else   variables[it] = zend_string_new(old[it]);
+
         it++;
     }
 

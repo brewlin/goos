@@ -97,8 +97,6 @@ void Proc::schedule()
         //TODO :因为实际被让出的协程可能由网络或者时间触发，这里先模拟处理被切出来的协程G
         //实际情况应该有其他如POLLER、timer 等来恢复该协程
         runqget();
-        //释放当前产生的G，回收该G相关内存
-        free_func();
     }
 }
 /**
@@ -135,24 +133,6 @@ Proc::Proc(size_t threads):stop(false),threads(threads)
         });
     }
 
-}
-/**
- * 创建的协程一般都是跨线程调度，所以目前回收该内存的方式如下：
- * 从哪创建的协程就从哪回收:针对的是 zend_function*资源
- * 因为在投递协程的时候需要拷贝 zend_function->op_array等信息
- * 而那些信息都是当前线程的AG(mmheap)上申请的，所以目前是在通过creator
- * 传递回去释放
- * @note 该函数执行释放的zend_function 肯定是单签线程创建的协程
- */
-void Proc::free_func()
-{
-    Freeq *free = static_cast<Freeq *>(GO_ZG(q));
-    lock_guard<mutex> lock(free->gofq_lock);
-    ZendFunction *call;
-    while(!free->func_list->isEmpty()){
-        call = free->func_list->pop();
-        delete call;
-    }
 }
 
 /**
