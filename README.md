@@ -49,7 +49,7 @@ Runtime::wait();
 - [x] 抢占调度，检测超过10ms持有G的线程，发起抢占调度
 ```php
 <?php
-//设置只有一个工作线程，在不抢占的情况下，用于无法触发 go 2
+//设置只有一个工作线程，在不抢占的情况下，永远无法触发 go 2
 Runtime::GOMAXPROCS(1);
 go(function(){
     for(;;) echo "go 1\n"; 
