@@ -31,7 +31,7 @@ void PHPCoroutine::init_stack()
 {
     uint32_t size = DEFAULT_PHP_STACK_PAGE_SIZE;
     //从堆上申请内存  来模拟栈
-    zend_vm_stack page = (zend_vm_stack)emalloc(size);
+    zend_vm_stack page = (zend_vm_stack)malloc(size);
     //栈顶
     page->top = ZEND_VM_STACK_ELEMENTS(page);
     //end 用来表示栈的边界
@@ -83,7 +83,7 @@ void PHPCoroutine::run(void *args)
     //表示将用户传入的闭包函数 设置到php栈上 表示进行函数调用
     EG(current_execute_data) = call;
     save_stack(sp);
-    //为当前的协程设置栈 可是获取当前协程就不能再用静态获取了
+    //为当前的协程设置栈
     sp->co = co;
     co->stack = sp;
 

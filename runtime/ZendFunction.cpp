@@ -23,7 +23,7 @@ ZendFunction::~ZendFunction()
     if(op->static_variables != nullptr){
         zend_hash_destroy(op->static_variables);
 //        FREE_HASHTABLE(op->static_variables);
-//        free(op->static_variables);
+        free(op->static_variables);
     }
     free(op->literals);
     free(op->refcount);

@@ -51,7 +51,7 @@ void Proc::prepare_shutdown()
 //    }
 //    ZEND_HASH_FOREACH_END();
     php_request_shutdown((void*)NULL);
-    PG(report_memleaks) = 0;
+    PG(report_memleaks) = 1;
     ts_free_thread();
 }
 /**
@@ -91,11 +91,12 @@ void Proc::schedule()
         else co->resume();
         //G运行结束 销毁栈
         if(ctx->is_end) co->close();
+        //处理切出来的协程
+        //TODO :因为实际被让出的协程可能由网络或者其他事件触发，这里先模拟处理被切出来的协程G
+        //实际情况应该有其他如POLLER、timer 等来恢复该协程
         //G被切出来，重新进行调度
         else GO_ZG(rq)->q->put(co);
-        //处理切出来的协程
-        //TODO :因为实际被让出的协程可能由网络或者时间触发，这里先模拟处理被切出来的协程G
-        //实际情况应该有其他如POLLER、timer 等来恢复该协程
+        //获取本地队列去找到一个可运行的G
         runqget();
     }
 }

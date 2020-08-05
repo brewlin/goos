@@ -98,7 +98,7 @@ void Coroutine::restore_stack(php_sp *sp) {
 void Coroutine::close()
 {
     zend_vm_stack stack = EG(vm_stack);
-    efree(stack);
+    free(stack);
     restore_stack(&main_stack);
     delete ctx;
     delete this;

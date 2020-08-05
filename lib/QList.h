@@ -1,7 +1,8 @@
 #ifndef GO_LIST_H
 #define GO_LIST_H
 template <typename T>
-struct Lnode{
+struct Lnode
+{
     Lnode(T v):v(v),next(nullptr){}
     T      v;
     Lnode* next;
@@ -9,7 +10,10 @@ struct Lnode{
 
 
 template <typename T>
-struct QList{
+struct QList
+{
+    Lnode<T>* head;
+    Lnode<T>* tail;
     void put(T v)
     {
         Lnode<T> *node = new Lnode<T>(v);
@@ -39,8 +43,6 @@ struct QList{
             return r;
         }
     }
-    Lnode<T>* head;
-    Lnode<T>* tail;
 };
 
 #endif //GO_LIST_H
