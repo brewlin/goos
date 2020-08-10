@@ -4,6 +4,7 @@
  <a href="https://github.com/brewlin/goos/network"><img alt="GitHub forks" src="https://img.shields.io/github/forks/brewlin/goos"></a>
  <a href="https://github.com/brewlin/goos/blob/master/LICENSE"><img alt="GitHub license" src="https://img.shields.io/github/license/brewlin/goos"></a>
  </p>
+
 GPM 多线程协程调度器 for PHP Extension
 ## process
 - [x] php环境线程隔离，协程隔离
@@ -14,6 +15,7 @@ GPM 多线程协程调度器 for PHP Extension
 - [ ] 协程栈自动收缩，防止 stack overflow
 - [x] 实现抢占调度,可以对任意在执行的协程发起抢占
 - [x] 优化抢占调度,检查任意超过10ms持有G的线程，发起抢占调度
+
 ## config & install
 ```asciidoc
 # 编译php必须加上 ZTS支持
