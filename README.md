@@ -5,7 +5,15 @@
  <a href="https://github.com/brewlin/goos/blob/master/LICENSE"><img alt="GitHub license" src="https://img.shields.io/github/license/brewlin/goos"></a>
  </p>
 GPM 多线程协程调度器 for PHP Extension
-
+## process
+- [x] php环境线程隔离，协程隔离
+- [x] 实现G-M调度,任意协程G创建后，自动绑定到线程M上去执行
+- [x] 实现多线程协程G调度，切出与恢复
+- [x] 优化php内存相关
+- [ ] 引入P, 实现G-P-M 任务窃取调度
+- [ ] 协程栈自动收缩，防止 stack overflow
+- [x] 实现抢占调度,可以对任意在执行的协程发起抢占
+- [x] 优化抢占调度,检查任意超过10ms持有G的线程，发起抢占调度
 ## config & install
 ```asciidoc
 # 编译php必须加上 ZTS支持
@@ -24,10 +32,6 @@ GPM 多线程协程调度器 for PHP Extension
 
 ```
 ## @G-M 多线程调度
-- [x] 实现任意协程G创建后，自动绑定到线程M上去执行
-- [x] 实现多线程协程G调度让出与恢复
-- [ ] 优化php函数的拷贝与释放，更好的隔离内存申请与安全释放
-- [ ] ... 
 ```php
 <?php
 Runtime::GOMAXPROCS(10);
@@ -46,7 +50,7 @@ Runtime::wait();
 ## @G-P-M 任务窃取调度
 
 ## @G-P-M 信号抢占调度
-- [x] 抢占调度，检测超过10ms持有G的线程，发起抢占调度
+
 ```php
 <?php
 //设置只有一个工作线程，在不抢占的情况下，永远无法触发 go 2
@@ -59,4 +63,11 @@ go(function(){
 });
 Runtime::wait();
 ```
+## docs
+- [Goos-多线程协程实现简要]()
+- [Goos-协程底层实现(一)]()
+- Goos-线程协程隔离(二)
+- Goos-线程切换实现(三)
+- Goos-抢占调度实现(四)
+- Goos-监控线程实现(五)
 
