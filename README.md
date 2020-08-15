@@ -66,10 +66,10 @@ go(function(){
 Runtime::wait();
 ```
 ## docs
-- [Goos-多线程协程实现简要]()
-- [Goos-协程底层实现(一)]()
+- [Goos-多线程协程实现简要](https://wiki.brewlin.com/wiki/blog/goos/Goos-%E5%A4%9A%E7%BA%BF%E7%A8%8B%E5%8D%8F%E7%A8%8B%E5%AE%9E%E7%8E%B0%E7%AE%80%E8%A6%81/)
+- [Goos-协程底层实现(一)](https://wiki.brewlin.com/wiki/blog/goos/Goos-%E5%BA%95%E5%B1%82%E5%8D%8F%E7%A8%8B%E5%AE%9E%E7%8E%B0(%E4%B8%80)/)
 - Goos-线程协程隔离(二)
-- Goos-线程切换实现(三)
+- [Goos-线程切换实现(三)](https://wiki.brewlin.com/wiki/blog/goos/Goos-%E5%BA%95%E5%B1%82%E5%8D%8F%E7%A8%8B%E5%AE%9E%E7%8E%B0(%E4%B8%89)/)
 - Goos-抢占调度实现(四)
 - Goos-监控线程实现(五)
 
