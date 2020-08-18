@@ -9,6 +9,7 @@
 #include <stdarg.h>
 #include <unistd.h>
 #include <time.h>
+#include "config.h"
 
 #define LOG_BUFFER_SIZE 1024
 #define LOG_DATE_STRLEN  64
@@ -22,23 +23,30 @@ extern char debug[DEBUG_MSG_SIZE];
 extern char trace[TRACE_MSG_SIZE];
 extern char warn[WARN_MSG_SIZE];
 extern char error[ERROR_MSG_SIZE];
+#ifdef GO_DEBUG
+    #define Debug(str, ...)                                                         \
+        snprintf(debug, DEBUG_MSG_SIZE, "%s: " str " in %s on line %d.", __func__, ##__VA_ARGS__, __FILE__, __LINE__); \
+        Log::put(LOG_DEBUG_D, debug);
 
-#define Debug(str, ...)                                                         \
-    snprintf(debug, DEBUG_MSG_SIZE, "%s: " str " in %s on line %d.", __func__, ##__VA_ARGS__, __FILE__, __LINE__); \
-    Log::put(LOG_DEBUG_D, debug);
+    #define Trace(str, ...)                                                         \
+        snprintf(trace, TRACE_MSG_SIZE, "%s: " str " in %s on line %d.", __func__, ##__VA_ARGS__, __FILE__, __LINE__); \
+        Log::put(LOG_TRACE_D, trace);
 
-#define Trace(str, ...)                                                         \
-    snprintf(trace, TRACE_MSG_SIZE, "%s: " str " in %s on line %d.", __func__, ##__VA_ARGS__, __FILE__, __LINE__); \
-    Log::put(LOG_TRACE_D, trace);
+    #define Warn(str, ...)                                                         \
+        snprintf(error, ERROR_MSG_SIZE, "%s: " str " in %s on line %d.", __func__, ##__VA_ARGS__, __FILE__, __LINE__); \
+        Log::put(LOG_WARNING_D, error);
 
-#define Warn(str, ...)                                                         \
-    snprintf(error, ERROR_MSG_SIZE, "%s: " str " in %s on line %d.", __func__, ##__VA_ARGS__, __FILE__, __LINE__); \
-    Log::put(LOG_WARNING_D, error);
+    #define Error(str, ...)                                                         \
+        snprintf(error, ERROR_MSG_SIZE, "%s: " str " in %s on line %d.", __func__, ##__VA_ARGS__, __FILE__, __LINE__); \
+        Log::put(LOG_ERROR_D, error); \
+        exit(-1);
+#else
+    #define Debug(str,...)
+    #define Trace(str,...)
+    #define Warn(str,...)
+    #define Error(str,...)
+#endif
 
-#define Error(str, ...)                                                         \
-    snprintf(error, ERROR_MSG_SIZE, "%s: " str " in %s on line %d.", __func__, ##__VA_ARGS__, __FILE__, __LINE__); \
-    Log::put(LOG_ERROR_D, error); \
-    exit(-1);
 
 enum Log_define{
     LOG_DEBUG_D,
