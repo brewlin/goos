@@ -6,7 +6,7 @@
  * @param func
  * @param data
  */
-Context::Context(run_func func,void *data):_fn(func),func_data(data)
+Context::Context(run_func func,void *data):_fn(func),func_data(data),is_end(false)
 {
     bp =  new char[DEFAULT_STACK];
     make_context(&cur_ctx,&context_run, static_cast<void *>(this),bp,DEFAULT_STACK);

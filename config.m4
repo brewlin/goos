@@ -19,6 +19,7 @@ if test "$PHP_GO" != "no"; then
         runtime/Proc.cpp         \
         runtime/ZendFunction.cpp \
         runtime/Sysmon.cpp       \
+        runtime/Log.cpp       \
 
         runtime/asm/jump_context.s \
         runtime/asm/make_context.cpp

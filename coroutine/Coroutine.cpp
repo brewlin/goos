@@ -1,4 +1,5 @@
 #include "Coroutine.h"
+#include "Log.h"
 /**
  * 创建一个G 并初始化C栈，并标记当前G所属的线程
  * @param func
@@ -73,8 +74,13 @@ void Coroutine::resume()
     gstatus = Grunnable;
     ctx->swap_in();
 }
+/**
+ * stack preempt
+ */
 void Coroutine::stackpreempt()
 {
+    cout << ctx->is_end <<endl;
+    Debug("exec stack preempt:%ld ctx->is_end:%d",this,ctx->is_end);
 //    gstatus = Preempt;
     yield();
 
@@ -83,7 +89,8 @@ void Coroutine::stackpreempt()
  * 切换php栈,在每次切换c栈的同时也需要切换该栈
  * @param sp
  */
-void Coroutine::restore_stack(php_sp *sp) {
+void Coroutine::restore_stack(php_sp *sp)
+{
     if(sp == nullptr)return;
     EG(vm_stack_top) = sp->vm_stack_top;
     EG(vm_stack_end) = sp->vm_stack_end;

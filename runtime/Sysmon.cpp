@@ -3,6 +3,8 @@
 #include <sys/signal.h>
 #include "Proc.h"
 #include "Coroutine.h"
+#include "Log.h"
+
 thread Sysmon::_m;
 
 /**
@@ -11,6 +13,7 @@ thread Sysmon::_m;
  */
 void Sysmon::sighandler(int signo)
 {
+    Debug("receive signal:%d",signo);
     //不可靠信号需要重新安装
     regsig();
     Coroutine *co = GO_ZG(_g);
@@ -31,6 +34,7 @@ void Sysmon::regsig()
     sigemptyset(&actions.sa_mask);
     /* 将参数set信号集初始化并清空 */
     actions.sa_flags = -1;
+    actions.sa_handler = sighandler;
     sigaction(SIGURG,&actions,NULL);
 }
 /**
@@ -39,12 +43,14 @@ void Sysmon::regsig()
  */
 void Sysmon::preemptPark(M *m)
 {
+    Debug("start park preempt");
     //同步两边状态
     m->tick = 0;
     GO_FETCH(m->_m,schedtick) = 0;
     Coroutine *co  = GO_FETCH(m->_m,_g);
     //发起抢占前判断G是否正常
     if(co != nullptr && co->gstatus == Grunnable){
+        Debug("start send signal:%d",SIGURG);
         pthread_kill(m->tid, SIGURG);
     }
 
@@ -58,6 +64,7 @@ void Sysmon::preemptM(M *m)
 {
     //检查周期是否一致
     if(m->tick != GO_FETCH(m->_m,schedtick)){
+        Debug("period not consistent");
         m->tick = GO_FETCH(m->_m,schedtick);
         return;
     }
@@ -66,7 +73,10 @@ void Sysmon::preemptM(M *m)
     auto now  = chrono::steady_clock::now();
     int timeout = chrono::duration<double,std::milli>(now-prev).count();
     //如果大于20ms 则需要执行抢占 php初始化比较消耗时间 10ms可能不够
-    if(timeout > 20) preemptPark(m);
+    if(timeout > 20){
+        Debug("over 20ms: start call preempt park");
+        preemptPark(m);
+    }
 //    }else{
 //        m->tick ++;
 //    }
@@ -76,6 +86,7 @@ void Sysmon::preemptM(M *m)
  */
 void Sysmon::monitor()
 {
+    Debug("sysmon start");
     //等待线程M加载完
     while (proc->threads != proc->start_threads)
         this_thread::sleep_for(chrono::milliseconds(1));
@@ -100,6 +111,7 @@ void Sysmon::monitor()
             bmaxnum ++;
         if(bmaxnum >= 5)break;
     }
+    Debug("sysmon start ending...")
     delete proc;
 }
 void Sysmon::newm(size_t procn)
