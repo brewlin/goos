@@ -3,6 +3,7 @@
 #ifndef PHP_GO_H
 # define PHP_GO_H
 #include "php.h"
+#include "config.h"
 #include "php_ini.h"
 #include "ext/standard/info.h"
 #include "php_network.h"

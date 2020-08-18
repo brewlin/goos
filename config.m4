@@ -2,6 +2,16 @@ PHP_ARG_ENABLE(go, whether to enable go support,
 Make sure that the comment is aligned:
 [  --enable-go           Enable go support])
 
+AC_ARG_ENABLE(debug,
+    [  --enable-debug,         compile with debug symbols],
+    [GO_DEBUG=1],
+    [GO_DEBUG=0]
+)
+
+if test "$GO_DEBUG" != "0"; then
+    AC_DEFINE(GO_DEBUG, 1, [enable debug])
+fi
+
 if test "$PHP_GO" != "no"; then
 
     PHP_ADD_LIBRARY(pthread)
