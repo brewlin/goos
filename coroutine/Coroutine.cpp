@@ -17,6 +17,7 @@ Coroutine::Coroutine(run_func func,ZendFunction *args)
  */
 long Coroutine::run()
 {
+    Debug("G run: start push g to global queue g:%ld",this);
     //投递到 proc 线程去执行该协程
     if(proc == nullptr){
         cout << "未初始化线程" <<endl;
@@ -32,6 +33,7 @@ long Coroutine::run()
  */
 void Coroutine::yield()
 {
+    Debug("yield G: g:%ld",this);
     PHPCoroutine::save_stack(&main_stack);
     restore_stack(stack);
     GO_ZG(_g) = nullptr;
@@ -48,6 +50,7 @@ void Coroutine::yield()
  */
 void Coroutine::newproc()
 {
+    Debug("run new G: g:%ld",this);
     callback->is_new = 0;
     callback->prepare_functions(this);
     PHPCoroutine::save_stack(&main_stack);
@@ -65,6 +68,7 @@ void Coroutine::newproc()
  */
 void Coroutine::resume()
 {
+    Debug("resume G: mark Grunnable g:%ld",this);
     restore_stack(&main_stack);
     PHPCoroutine::save_stack(stack);
     GO_ZG(_g) =  this;
@@ -79,8 +83,7 @@ void Coroutine::resume()
  */
 void Coroutine::stackpreempt()
 {
-    cout << ctx->is_end <<endl;
-    Debug("exec stack preempt:%ld ctx->is_end:%d",this,ctx->is_end);
+    Debug("exec stack preempt:%ld gstatus:%d ctx->is_end:%d",this,gstatus,ctx->is_end);
 //    gstatus = Preempt;
     yield();
 

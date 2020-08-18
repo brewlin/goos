@@ -88,7 +88,7 @@ void Proc::schedule()
             cout << "co exception:"<<co<<endl;
             continue;
         }
-        Debug("co:%ld",co);
+        Debug("get one G: %ld",co);
         //当前线程分配到一个未初始化的G
         if(co->gstatus == Gidle) co->newproc();
         //恢复被暂停的G

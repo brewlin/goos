@@ -46,6 +46,7 @@ void ZendFunction::prepare_functions(Coroutine *co) {
     ZendFunction *call = co->callback;
     zend_string *key, *name;
     void *value = NULL,*prepared = NULL;
+    //TODO: need handle it,could crash
     ZEND_HASH_FOREACH_STR_KEY_PTR(GO_CG(co->creator, function_table), key, value)
     {
         if (((zend_function*)value)->type == ZEND_INTERNAL_FUNCTION ||

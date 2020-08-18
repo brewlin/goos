@@ -13,10 +13,10 @@ thread Sysmon::_m;
  */
 void Sysmon::sighandler(int signo)
 {
-    Debug("receive signal:%d",signo);
     //不可靠信号需要重新安装
     regsig();
     Coroutine *co = GO_ZG(_g);
+    Debug("receive signal:%d _g:%ld co->status:%d Grunnable:%d",signo,co,co->gstatus,Grunnable);
     //判断当前G是否状态正常
     if(co != nullptr && co->gstatus == Grunnable){
         //抢占切出
@@ -43,12 +43,12 @@ void Sysmon::regsig()
  */
 void Sysmon::preemptPark(M *m)
 {
-    Debug("start park preempt");
     //同步两边状态
     m->tick = 0;
     GO_FETCH(m->_m,schedtick) = 0;
     Coroutine *co  = GO_FETCH(m->_m,_g);
     //发起抢占前判断G是否正常
+    Debug("start park preempt: _g:%ld co->gstatus:%d Grunnable:%d",co,co->gstatus,Grunnable);
     if(co != nullptr && co->gstatus == Grunnable){
         Debug("start send signal:%d",SIGURG);
         pthread_kill(m->tid, SIGURG);
@@ -99,6 +99,7 @@ void Sysmon::monitor()
         int total_n = 0;
         auto now = proc->now;
         for(M &m : allm){
+            //TODO:need handle it,could crash
             if(GO_FETCH(m._m,_g) != nullptr){
                 preemptM(&m);
             }else if(proc->tasks.empty()){

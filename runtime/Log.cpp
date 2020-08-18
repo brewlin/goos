@@ -1,4 +1,5 @@
 #include "Log.h"
+#include <thread>
 
 char debug[DEBUG_MSG_SIZE];
 char trace[TRACE_MSG_SIZE];
@@ -38,8 +39,9 @@ void Log::put(int level, char *cnt)
     t = time(NULL);
     p = localtime(&t);
     snprintf(date_str, LOG_DATE_STRLEN, "%d-%02d-%02d %02d:%02d:%02d", p->tm_year + 1900, p->tm_mon + 1, p->tm_mday, p->tm_hour, p->tm_min, p->tm_sec);
-
-    n = snprintf(log_str, LOG_BUFFER_SIZE, "[%s]\t%s\t%s\n", date_str, level_str, cnt);
+    pthread_t pid = pthread_self();
+//    n = snprintf(log_str, LOG_BUFFER_SIZE, "[%s][%ld]\t%s\t%s\n", date_str,pid, level_str, cnt);
+    n = snprintf(log_str, LOG_BUFFER_SIZE, "[tid:%ld]\t%s\t%s\n", pid, level_str, cnt);
     if (write(STDOUT_FILENO, log_str, n) < 0) {
         printf("write(log_fd, size=%d) failed. Error: %s[%d].\n", n, strerror(errno), errno);
     }
