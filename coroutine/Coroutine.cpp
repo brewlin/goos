@@ -36,11 +36,16 @@ void Coroutine::yield()
     Debug("yield G: g:%ld",this);
     PHPCoroutine::save_stack(&main_stack);
     restore_stack(stack);
-    GO_ZG(_g) = nullptr;
+
+    {
+        unique_lock <mutex> lock(*GO_ZG(_glock));
+        Debug("_glock:%ld",GO_ZG(_glock));
+        GO_ZG(_g) = nullptr;
+        //每次切换出去时需要更新tick 和时间
+        GO_ZG(schedwhen) = chrono::steady_clock::now();
+        GO_ZG(schedtick) = 0;
+    }
     gstatus = Gdead;
-    //每次切换出去时需要更新tick 和时间
-    GO_ZG(schedwhen) = chrono::steady_clock::now();
-    GO_ZG(schedtick) = 0;
     ctx->swap_out();
 }
 /**
@@ -54,10 +59,14 @@ void Coroutine::newproc()
     callback->is_new = 0;
     callback->prepare_functions(this);
     PHPCoroutine::save_stack(&main_stack);
-    GO_ZG(_g) =  this;
-    //每次切入时出去时需要更新tick 和时间
-    GO_ZG(schedwhen) = chrono::steady_clock::now();
-    GO_ZG(schedtick) += 1;
+    {
+        unique_lock <mutex> lock(*GO_ZG(_glock));
+        Debug("_glock:%ld",GO_ZG(_glock));
+        GO_ZG(_g) = this;
+        //每次切入时出去时需要更新tick 和时间
+        GO_ZG(schedwhen) = chrono::steady_clock::now();
+        GO_ZG(schedtick) += 1;
+    }
     gstatus = Grunnable;
     ctx->swap_in();
 }
@@ -71,10 +80,14 @@ void Coroutine::resume()
     Debug("resume G: mark Grunnable g:%ld",this);
     restore_stack(&main_stack);
     PHPCoroutine::save_stack(stack);
-    GO_ZG(_g) =  this;
-    //每次切入时出去时需要更新tick 和时间
-    GO_ZG(schedwhen) = chrono::steady_clock::now();
-    GO_ZG(schedtick) += 1;
+    {
+        unique_lock <mutex> lock(*GO_ZG(_glock));
+        Debug("_glock:%ld",GO_ZG(_glock));
+        GO_ZG(_g) = this;
+        //每次切入时出去时需要更新tick 和时间
+        GO_ZG(schedwhen) = chrono::steady_clock::now();
+        GO_ZG(schedtick) += 1;
+    }
     gstatus = Grunnable;
     ctx->swap_in();
 }

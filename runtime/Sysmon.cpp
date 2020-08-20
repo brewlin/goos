@@ -63,13 +63,13 @@ void Sysmon::preemptPark(M *m)
 void Sysmon::preemptM(M *m)
 {
     //检查周期是否一致
-    if(m->tick != GO_FETCH(m->_m,schedtick)){
-        Debug("period not consistent");
-        m->tick = GO_FETCH(m->_m,schedtick);
+    if(m->tick != m->G->schedtick){
+        Debug("period not consistent m:%ld",m->tid);
+        m->tick = m->G->schedtick;
         return;
     }
     //检查是否超时 上次时间+10ms 如果还小于当前时间
-    auto prev = GO_FETCH(m->_m,schedwhen);
+    auto prev = m->G->schedwhen;
     auto now  = chrono::steady_clock::now();
     int timeout = chrono::duration<double,std::milli>(now-prev).count();
     //如果大于20ms 则需要执行抢占 php初始化比较消耗时间 10ms可能不够
@@ -98,13 +98,16 @@ void Sysmon::monitor()
         this_thread::sleep_for(chrono::milliseconds(5));
         int total_n = 0;
         auto now = proc->now;
-        for(M &m : allm){
-            //TODO:need handle it,could crash
-            if(GO_FETCH(m._m,_g) != nullptr){
+        for(M &m : allm)
+        {
+            unique_lock <mutex> lock(*m.G->_glock);
+            Debug("mid:%ld G:%ld _g:%d _glock:%ld",m.tid,m.G,m.G->_g,m.G->_glock);
+            if(m.G->_g != nullptr){
                 preemptM(&m);
             }else if(proc->tasks.empty()){
                 total_n ++;
             }
+
         }
         double equal = chrono::duration<double,std::milli>(proc->now-now).count();
         //在此次检查线程期间是否 proc->task已更新，如果更新了就不计数

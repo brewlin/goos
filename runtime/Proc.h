@@ -16,14 +16,18 @@ typedef chrono::time_point<chrono::steady_clock> time_point;
  */
 struct M
 {
-    void***     _m;
-    pthread_t   tid;
+    void***          _m;
+    pthread_t        tid;
     //标记每次检查抢占的周期，如果需要执行抢占则更新该tick
     //该tick 同时用来标识 在检查期间是否该协程已经发生改变
-    int         tick;
-    M(){
+    int              tick;
+    //全局线程安全变量
+    zend_go_globals* G;
+    M()
+    {
         _m = (void***)tsrm_get_ls_cache();
         tid = pthread_self();
+        G = FETCH_CTX_ALL(_m, go_globals_id, zend_go_globals*);
     }
 };
 

@@ -25,13 +25,14 @@ void Proc::gogo(Context* ctx)
  */
 void Proc::preapre_start()
 {
-    start_threads ++;
     ts_resource(0);
     TSRMLS_CACHE_UPDATE();
     //将线程索引加入到全局M allm队列中
     M m;
     allm.emplace_back(m);
     php_request_startup();
+    //防止线程还没有启动完全 sysmon线程就在读取zend_go_globals*
+    start_threads ++;
 }
 /**
  * 结束php声明周期，释放相关全局变量

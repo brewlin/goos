@@ -16,6 +16,7 @@ static void go_globals_ctor(zend_go_globals *pg)
     pg->q = new Freeq();
     pg->rq = new Runq();
     pg->_g = NULL;
+    pg->_glock = new mutex;
     pg->pid = 0L;
     pg->signal = 0;
     pg->resources = NULL;
@@ -53,6 +54,7 @@ PHP_RINIT_FUNCTION(go)
 }
 PHP_RSHUTDOWN_FUNCTION(go)
 {
+    delete GO_ZG(_glock);
     delete GO_ZG(q);
     delete GO_ZG(rq);
     zend_hash_destroy(&GO_ZG(resolve));

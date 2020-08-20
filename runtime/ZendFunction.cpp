@@ -2,6 +2,7 @@
 #include "ZendFunction.h"
 #include "Coroutine.h"
 #include "ZendString.h"
+#include "Log.h"
 
 void ZendFunction::freehash(zval *zval_ptr)
 {
@@ -47,14 +48,25 @@ void ZendFunction::prepare_functions(Coroutine *co) {
     zend_string *key, *name;
     void *value = NULL,*prepared = NULL;
     //TODO: need handle it,could crash
-    ZEND_HASH_FOREACH_STR_KEY_PTR(GO_CG(co->creator, function_table), key, value)
+    zend_compiler_globals* cg = ((zend_compiler_globals *) (*((void ***) co->creator))[TSRM_UNSHUFFLE_RSRC_ID(compiler_globals_id)]);
+    Debug("creator:%ld cgid:%ld cg:%ld null:%d",co->creator,compiler_globals_id,cg,cg== nullptr);
+    if(cg == nullptr){
+        cg = ((zend_compiler_globals *) (*((void ***) co->creator))[TSRM_UNSHUFFLE_RSRC_ID(compiler_globals_id)]);
+        Error("creator thread local not exist cg:%ld",cg);
+        return;
+    }
+    HashTable *function_table = cg->function_table;
+    HashTable *local_table    = CG(function_table);
+    Debug("origin:%ld local:%ld",function_table,local_table)
+    ZEND_HASH_FOREACH_STR_KEY_PTR(function_table, key, value)
     {
         if (((zend_function*)value)->type == ZEND_INTERNAL_FUNCTION ||
-            zend_hash_exists(GO_CG(GO_ZG(local), function_table), key))
+            zend_hash_exists(local_table, key))
             continue;
         name = zend_string_new(key);
         prepared = copy_function((zend_function*)value);
-        if (!zend_hash_add_ptr(CG(function_table), name, prepared)) {
+        if (!zend_hash_add_ptr(local_table, name, prepared)) {
+            Debug("function table add failed: %ld",local_table)
             destroy_op_array((zend_op_array*)prepared);
         }
 

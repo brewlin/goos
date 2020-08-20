@@ -44,12 +44,14 @@ ZEND_BEGIN_MODULE_GLOBALS(go)
     int         schedtick;
     zval        _this;
     Coroutine*  _g;
+    mutex*      _glock;
     HashTable   resolve;
     HashTable   filenames;
     HashTable*  resources;
     int         hard_copy_interned_strings;
 ZEND_END_MODULE_GLOBALS(go)
 #   define FETCH_CTX(ls, id, type, element) (((type) (*((void ***) ls))[TSRM_UNSHUFFLE_RSRC_ID(id)])->element)
+#   define FETCH_CTX_ALL(ls, id, type) ((type) (*((void ***) ls))[TSRM_UNSHUFFLE_RSRC_ID(id)])
 #   define GO_CG(ls, v) FETCH_CTX(ls, compiler_globals_id, zend_compiler_globals*, v)
 #   define GO_FETCH(ls, v) FETCH_CTX(ls, go_globals_id, zend_go_globals*, v)
 #	define GO_ZG(v) TSRMG(go_globals_id, zend_go_globals *, v)
