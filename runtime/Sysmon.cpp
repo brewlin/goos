@@ -15,12 +15,14 @@ void Sysmon::sighandler(int signo)
 {
     //不可靠信号需要重新安装
     regsig();
+    unique_lock <mutex> lock(*GO_ZG(_glock));
     Coroutine *co = GO_ZG(_g);
+    if(co == nullptr)return;
     Debug("receive signal:%d _g:%ld co->status:%d Grunnable:%d",signo,co,co->gstatus,Grunnable);
     //判断当前G是否状态正常
-    if(co != nullptr && co->gstatus == Grunnable){
+    if(co->gstatus == Grunnable){
         //抢占切出
-        GO_ZG(_g)->stackpreempt();
+        co->stackpreempt();
     }
     return;
 }
@@ -48,8 +50,9 @@ void Sysmon::preemptPark(M *m)
     GO_FETCH(m->_m,schedtick) = 0;
     Coroutine *co  = GO_FETCH(m->_m,_g);
     //发起抢占前判断G是否正常
+    if(co == nullptr)return;
     Debug("start park preempt: _g:%ld co->gstatus:%d Grunnable:%d",co,co->gstatus,Grunnable);
-    if(co != nullptr && co->gstatus == Grunnable){
+    if(co->gstatus == Grunnable){
         Debug("start send signal:%d",SIGURG);
         pthread_kill(m->tid, SIGURG);
     }
@@ -106,13 +109,17 @@ void Sysmon::monitor()
                 preemptM(&m);
             }else if(proc->tasks.empty()){
                 total_n ++;
+            }else{
+                proc->cond.notify_one();
             }
 
         }
         double equal = chrono::duration<double,std::milli>(proc->now-now).count();
         //在此次检查线程期间是否 proc->task已更新，如果更新了就不计数
-        if(now == proc->now && total_n == pn)
+        Debug("check quit: equal: total_n:%d pn:%d ready:%d",total_n,pn,proc->ready);
+        if(equal == 0 && total_n == pn && proc->ready)
             bmaxnum ++;
+        else bmaxnum = 0;
         if(bmaxnum >= 5)break;
     }
     Debug("sysmon start ending...")
@@ -121,9 +128,9 @@ void Sysmon::monitor()
 void Sysmon::newm(size_t procn)
 {
     regsig();
-    if(proc != nullptr)throw "sysmon init failed";
+    assert(proc == nullptr);
     proc = new Proc(procn);
-    if(proc == nullptr) throw "proc init failed";
+    assert(proc != nullptr);
     _m = thread(monitor);
 }
 void Sysmon::wait()

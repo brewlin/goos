@@ -38,7 +38,7 @@ void Coroutine::yield()
     restore_stack(stack);
 
     {
-        unique_lock <mutex> lock(*GO_ZG(_glock));
+//        unique_lock <mutex> lock(*GO_ZG(_glock));
         Debug("_glock:%ld",GO_ZG(_glock));
         GO_ZG(_g) = nullptr;
         //每次切换出去时需要更新tick 和时间

@@ -18,7 +18,7 @@ PHP_METHOD(runtime,GOMAXPROCS)
 }
 PHP_METHOD(runtime,wait)
 {
-    this_thread::sleep_for(chrono::seconds(1));
+    proc->ready = true;
     Sysmon::wait();
 }
 const zend_function_entry go_runtime_methods[] =

@@ -49,6 +49,7 @@ public:
     condition_variable  cond;
     queue<Context *>    tasks;
     time_point          now;
+    bool                ready;
 private:
     vector<thread>      workers;
     mutex queue_mu;

@@ -15,6 +15,7 @@ vector<M> allm;
  */
 void Proc::gogo(Context* ctx)
 {
+    assert(!stop);
     unique_lock<mutex> lock(queue_mu);
     now = chrono::steady_clock::now();
     this->tasks.emplace(ctx);
@@ -64,18 +65,28 @@ void Proc::prepare_shutdown()
  */
 void Proc::schedule()
 {
+    Context*   ctx;
+    Coroutine* co;
+    Runq *rq = static_cast<Runq *>(GO_ZG(rq));
     for(;;){
-        Context*   ctx;
-        Coroutine* co;
-        Runq *rq = static_cast<Runq *>(GO_ZG(rq));
         {
             unique_lock<mutex> lock(this->queue_mu);
-            this->cond.wait(lock,[this,rq]{
-                return this->stop || !this->tasks.empty() || !rq->q->isEmpty();
-            });
 
-            if(this->stop && this->tasks.empty() && rq->q->isEmpty())
+            auto res = this->cond.wait_for(lock,chrono::seconds(1)) == cv_status::timeout;
+//            this->cond.wait(lock,[this,rq]{
+//                return this->stop || !this->tasks.empty() || !rq->q->isEmpty();
+//            });
+            Debug("G event wait:%d stop:%d tasks.empty:%d q.isEmpty:%d",res,this->stop,this->tasks.empty(),rq->q->isEmpty());
+            if(this->stop || !this->tasks.empty() || !rq->q->isEmpty()){
+                Debug("could get one g");
+            }
+            else{
+                continue;
+            }
+
+            if(this->stop && this->tasks.empty() && rq->q->isEmpty()){
                 break;
+            }
 
             if(!this->tasks.empty()){
                 ctx = move(this->tasks.front());
@@ -86,7 +97,7 @@ void Proc::schedule()
             }
         }
         if(co == nullptr){
-            cout << "co exception:"<<co<<endl;
+            Debug("co exception:%ld",co);
             continue;
         }
         Debug("get one G: %ld",co);
@@ -135,7 +146,7 @@ void Proc::runqget()
  * 初始化创建固定数量的线程
  * @param threads
  */
-Proc::Proc(size_t threads):stop(false),threads(threads)
+Proc::Proc(size_t threads):stop(false),threads(threads),ready(false)
 {
     for(size_t i = 0; i < threads ; i ++){
         workers.emplace_back([this,i]
