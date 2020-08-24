@@ -15,13 +15,15 @@ void Sysmon::sighandler(int signo)
 {
     //不可靠信号需要重新安装
     regsig();
-    unique_lock <mutex> lock(*GO_ZG(_glock));
+    unique_lock <mutex> lock(*GO_ZG(_glock),defer_lock);
+    lock.lock();
     Coroutine *co = GO_ZG(_g);
     if(co == nullptr)return;
     Debug("receive signal:%d _g:%ld co->status:%d Grunnable:%d",signo,co,co->gstatus,Grunnable);
     //判断当前G是否状态正常
     if(co->gstatus == Grunnable){
         //抢占切出
+        lock.unlock();
         co->stackpreempt();
     }
     return;
@@ -103,11 +105,15 @@ void Sysmon::monitor()
         auto now = proc->now;
         for(M &m : allm)
         {
-            unique_lock <mutex> lock(*m.G->_glock);
+            unique_lock <mutex> lock(*m.G->_glock,try_to_lock);
+            if(!lock.owns_lock()){
+                Debug("not get lock");
+                continue;
+            }
             Debug("mid:%ld G:%ld _g:%d _glock:%ld",m.tid,m.G,m.G->_g,m.G->_glock);
             if(m.G->_g != nullptr){
                 preemptM(&m);
-            }else if(proc->tasks.empty()){
+            }else if(proc->tasks.empty() && m.G->rq->q->isEmpty()){
                 total_n ++;
             }else{
                 proc->cond.notify_one();
@@ -117,12 +123,14 @@ void Sysmon::monitor()
         double equal = chrono::duration<double,std::milli>(proc->now-now).count();
         //在此次检查线程期间是否 proc->task已更新，如果更新了就不计数
         Debug("check quit: equal: total_n:%d pn:%d ready:%d",total_n,pn,proc->ready);
+        cout << "check quit: equal: total_n:%d pn:%d ready:%d" << total_n << pn << proc->ready << endl;
         if(equal == 0 && total_n == pn && proc->ready)
             bmaxnum ++;
         else bmaxnum = 0;
         if(bmaxnum >= 5)break;
     }
     Debug("sysmon start ending...")
+    cout << "sysmon start ending..." <<endl;
     delete proc;
 }
 void Sysmon::newm(size_t procn)

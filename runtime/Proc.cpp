@@ -165,7 +165,7 @@ Proc::Proc(size_t threads):stop(false),threads(threads),ready(false)
 Proc::~Proc()
 {
     {
-        unique_lock <mutex> lock(queue_mu);
+        lock_guard <mutex> lock(queue_mu);
         stop = true;
     }
     cond.notify_all();

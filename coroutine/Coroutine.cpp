@@ -60,7 +60,9 @@ void Coroutine::newproc()
     callback->prepare_functions(this);
     PHPCoroutine::save_stack(&main_stack);
     {
-        unique_lock <mutex> lock(*GO_ZG(_glock));
+        unique_lock <mutex> lock(*GO_ZG(_glock),defer_lock);
+        if(!lock.try_lock())
+            Debug(" not get the lock");
         Debug("_glock:%ld",GO_ZG(_glock));
         GO_ZG(_g) = this;
         //每次切入时出去时需要更新tick 和时间
@@ -81,7 +83,9 @@ void Coroutine::resume()
     restore_stack(&main_stack);
     PHPCoroutine::save_stack(stack);
     {
-        unique_lock <mutex> lock(*GO_ZG(_glock));
+        unique_lock <mutex> lock(*GO_ZG(_glock),defer_lock);
+        if(!lock.try_lock())
+            Debug(" not get the lock");
         Debug("_glock:%ld",GO_ZG(_glock));
         GO_ZG(_g) = this;
         //每次切入时出去时需要更新tick 和时间
