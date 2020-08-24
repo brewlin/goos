@@ -21,6 +21,7 @@ ZendFunction::ZendFunction(zend_function *func,zval *argv,uint32_t argc):argv(ar
 ZendFunction::~ZendFunction()
 {
     zend_op_array *op = &func->op_array;
+    //TODO: could crash
     if(op->static_variables != nullptr){
         zend_hash_destroy(op->static_variables);
 //        FREE_HASHTABLE(op->static_variables);

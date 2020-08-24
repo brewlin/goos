@@ -1,6 +1,7 @@
 #include "Context.h"
 #include "php_go.h"
 #include "Coroutine.h"
+#include "Log.h"
 /**
  * 创建c栈
  * @param func
@@ -8,7 +9,12 @@
  */
 Context::Context(run_func func,void *data):_fn(func),func_data(data),is_end(false)
 {
-    bp =  new char[DEFAULT_STACK];
+    try{
+        bp =  new char[DEFAULT_STACK];
+    }catch (const bad_alloc& e){
+        Debug("alloc context mem failed: %s",e.what());
+        exit(-1);
+    }
     make_context(&cur_ctx,&context_run, static_cast<void *>(this),bp,DEFAULT_STACK);
 }
 /**

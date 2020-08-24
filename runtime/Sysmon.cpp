@@ -123,14 +123,12 @@ void Sysmon::monitor()
         double equal = chrono::duration<double,std::milli>(proc->now-now).count();
         //在此次检查线程期间是否 proc->task已更新，如果更新了就不计数
         Debug("check quit: equal: total_n:%d pn:%d ready:%d",total_n,pn,proc->ready);
-        cout << "check quit: equal: total_n:%d pn:%d ready:%d" << total_n << pn << proc->ready << endl;
         if(equal == 0 && total_n == pn && proc->ready)
             bmaxnum ++;
         else bmaxnum = 0;
         if(bmaxnum >= 5)break;
     }
     Debug("sysmon start ending...")
-    cout << "sysmon start ending..." <<endl;
     delete proc;
 }
 void Sysmon::newm(size_t procn)
