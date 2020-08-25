@@ -17,7 +17,7 @@ Coroutine::Coroutine(run_func func,ZendFunction *args)
  */
 long Coroutine::run()
 {
-    Debug("G run: start push g to global queue g:%ld",this);
+    Debug("G run: start push g to global queue g:%x ctx:%x", this, ctx);
     //投递到 proc 线程去执行该协程
     if(proc == nullptr){
         cout << "未初始化线程" <<endl;
@@ -125,8 +125,15 @@ void Coroutine::restore_stack(php_sp *sp)
 void Coroutine::close()
 {
     zend_vm_stack stack = EG(vm_stack);
-    free(stack);
-    restore_stack(&main_stack);
+//    free(stack);
+    php_stack = stack;
+    GO_ZG(free_stack)->q->put(this);
+//    restore_stack(&main_stack);
+//    delete ctx;
+//    delete this;
+}
+Coroutine::~Coroutine()
+{
+    free(php_stack);
     delete ctx;
-    delete this;
 }

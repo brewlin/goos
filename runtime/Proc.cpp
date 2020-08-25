@@ -40,6 +40,12 @@ void Proc::preapre_start()
  */
 void Proc::prepare_shutdown()
 {
+    Stackq *rq = static_cast<Stackq *>(GO_ZG(free_stack));
+    Coroutine *co;
+    while(!rq->q->isEmpty()){
+        co = rq->q->pop();
+        delete co;
+    }
     zend_string *key;
     void *value = NULL;
 //    ZEND_HASH_REVERSE_FOREACH_STR_KEY_VAL(EG(function_table), key, zv) {

@@ -29,11 +29,13 @@ extern zend_module_entry go_module_entry;
 extern zend_class_entry *go_coroutine_ce_ptr;
 
 class Freeq;
+class Stackq;
 class Coroutine;
 class Runq;
 ZEND_EXTERN_MODULE_GLOBALS(go)
 #ifndef GO_ZG
 ZEND_BEGIN_MODULE_GLOBALS(go)
+    Stackq*     free_stack;
     Freeq*      q;
     Runq*       rq;
     pid_t       pid;

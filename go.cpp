@@ -13,6 +13,7 @@ ZEND_DECLARE_MODULE_GLOBALS(go)
 static void go_globals_ctor(zend_go_globals *pg)
 {
     ZVAL_UNDEF(&pg->_this);
+    pg->free_stack = new Stackq();
     pg->q = new Freeq();
     pg->rq = new Runq();
     pg->_g = NULL;
@@ -54,6 +55,7 @@ PHP_RINIT_FUNCTION(go)
 }
 PHP_RSHUTDOWN_FUNCTION(go)
 {
+    delete GO_ZG(free_stack);
     delete GO_ZG(_glock);
     delete GO_ZG(q);
     delete GO_ZG(rq);

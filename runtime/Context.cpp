@@ -17,6 +17,10 @@ Context::Context(run_func func,void *data):_fn(func),func_data(data),is_end(fals
     }
     make_context(&cur_ctx,&context_run, static_cast<void *>(this),bp,DEFAULT_STACK);
 }
+void Context::reset()
+{
+    make_context(&cur_ctx,&context_run, static_cast<void *>(this),bp,DEFAULT_STACK);
+}
 /**
  * 主要运行的函数
  * @param arg

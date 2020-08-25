@@ -19,6 +19,7 @@ public:
     void        swap_in();
     void        swap_out();
     bool        is_end;
+    void        reset();
 };
 
 

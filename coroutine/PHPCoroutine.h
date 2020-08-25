@@ -27,7 +27,7 @@ class PHPCoroutine {
 public:
     static long                     go(zend_function *call,zval *argv,uint32_t argc);
     static void                     save_stack(php_sp *sp);
-    static void                     init_stack();
+    static void                     init_stack(Coroutine *co);
     static void                     run(void *args);
 
 };

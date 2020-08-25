@@ -10,7 +10,13 @@
 long PHPCoroutine::go(zend_function *func,zval *argv,uint32_t argc)
 {
     ZendFunction *call = new ZendFunction(func,argv,argc);
-    Coroutine *ctx = new Coroutine(run, call);
+    Coroutine *ctx;
+    if(!GO_ZG(free_stack)->q->isEmpty()){
+        ctx = GO_ZG(free_stack)->get_one();
+        ctx->callback = call;
+    }else{
+        ctx = new Coroutine(run, call);
+    }
     return ctx->run();
 }
 /**
@@ -27,11 +33,15 @@ void PHPCoroutine::save_stack(php_sp *sp)
 /**
  * 为当前要执行的协程G 从堆上申请一段 空间作为php栈
  */
-void PHPCoroutine::init_stack()
+void PHPCoroutine::init_stack(Coroutine* co)
 {
     uint32_t size = DEFAULT_PHP_STACK_PAGE_SIZE;
+    zend_vm_stack page;
     //从堆上申请内存  来模拟栈
-    zend_vm_stack page = (zend_vm_stack)malloc(size);
+    if(co->php_stack != nullptr)
+        page = (zend_vm_stack)co->php_stack;
+    else
+        page = (zend_vm_stack)malloc(size);
     //栈顶
     page->top = ZEND_VM_STACK_ELEMENTS(page);
     //end 用来表示栈的边界
@@ -63,7 +73,7 @@ void PHPCoroutine::run(void *args)
     php_sp *sp;
     zend_execute_data *call;
     //获取一个新的php栈
-    init_stack();
+    init_stack(co);
     call = (zend_execute_data *)(EG(vm_stack_top));
     sp = (php_sp *) EG(vm_stack_top);
     EG(vm_stack_top) = (zval *)((char *)call + PHP_COROUTINE_STACK_SLOT * sizeof(zval));
