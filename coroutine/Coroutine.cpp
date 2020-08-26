@@ -128,7 +128,7 @@ void Coroutine::close()
 //    free(stack);
     php_stack = stack;
     GO_ZG(free_stack)->q->put(this);
-//    restore_stack(&main_stack);
+    restore_stack(&main_stack);
 //    delete ctx;
 //    delete this;
 }

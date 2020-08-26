@@ -11,6 +11,7 @@ long PHPCoroutine::go(zend_function *func,zval *argv,uint32_t argc)
 {
     ZendFunction *call = new ZendFunction(func,argv,argc);
     Coroutine *ctx;
+    //TODO:在主线程时 无本地队列！
     if(!GO_ZG(free_stack)->q->isEmpty()){
         ctx = GO_ZG(free_stack)->get_one();
         ctx->callback = call;
