@@ -39,6 +39,7 @@ void Proc::preapre_start()
  */
 void Proc::prepare_shutdown()
 {
+    Debug("start shutdown thread");
     queue<Coroutine*> *q = (GO_ZG(free_stack));
     Coroutine *co;
     while(!q->empty()){
@@ -79,20 +80,10 @@ void Proc::schedule()
             unique_lock<mutex> lock(this->queue_mu);
 
             auto res = this->cond.wait_for(lock,chrono::seconds(1)) == cv_status::timeout;
-//            this->cond.wait(lock,[this,runq]{
-//                return this->stop || !this->tasks.empty() || !runq->q->isEmpty();
-//            });
             Debug("G event wait:%d stop:%d tasks.empty:%d q.isEmpty:%d",res,this->stop,this->tasks.empty(),runq->empty());
-            if(this->stop || !this->tasks.empty() || !runq->empty()){
-                Debug("could get one g");
-            }
-            else{
-                continue;
-            }
-
-            if(this->stop && this->tasks.empty() && runq->empty()){
-                break;
-            }
+            if(this->tasks.empty() && runq->empty())
+                if(this->stop) break;
+                else continue;
 
             if(!this->tasks.empty()){
                 ctx = move(this->tasks.front());

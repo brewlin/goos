@@ -19,11 +19,10 @@ Coroutine::Coroutine(run_func func,ZendFunction *args)
  */
 Coroutine* Coroutine::getg(ZendFunction* fn)
 {
-    Coroutine *co;
+    Coroutine *co = nullptr;
     queue<Coroutine*> *free = GO_ZG(free_stack);
     Debug("get g free_list:%x size:%ld",free,free->size());
     if(!free->empty()){
-        Debug("fetch from free_list");
         co = move(free->front());
         free->pop();
         //格式化php栈
@@ -32,9 +31,7 @@ Coroutine* Coroutine::getg(ZendFunction* fn)
         memset(co->ctx->bp,0,DEFAULT_STACK);
         co->ctx->reset();
         co->callback = fn;
-    }else{
-        Debug("get g by new one");
-        co = new Coroutine(PHPCoroutine::run,fn);
+        co->gstatus = Gidle;
     }
     return co;
 }
@@ -46,10 +43,7 @@ long Coroutine::run()
 {
     Debug("G run: start push g to global queue g:%x ctx:%x", this, ctx);
 //    投递到 proc 线程去执行该协程
-    if(proc == nullptr){
-        cout << "未初始化线程" <<endl;
-        throw "未初始化线程";
-    }
+    if(proc == nullptr)Error("proc not init");
     proc->gogo(ctx);
     return 1;
 }
