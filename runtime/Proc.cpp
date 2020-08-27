@@ -3,7 +3,6 @@
 #include "Coroutine.h"
 #include "ZendFunction.h"
 #include "Sysmon.h"
-#include "QList.h"
 #include "Log.h"
 
 
@@ -40,10 +39,11 @@ void Proc::preapre_start()
  */
 void Proc::prepare_shutdown()
 {
-    Stackq *rq = static_cast<Stackq *>(GO_ZG(free_stack));
+    queue<Coroutine*> *q = (GO_ZG(free_stack));
     Coroutine *co;
-    while(!rq->q->isEmpty()){
-        co = rq->q->pop();
+    while(!q->empty()){
+        co = move(q->front());
+        q->pop();
         delete co;
     }
     zend_string *key;
@@ -73,24 +73,24 @@ void Proc::schedule()
 {
     Context*   ctx;
     Coroutine* co;
-    Runq *rq = static_cast<Runq *>(GO_ZG(rq));
+    queue<Coroutine*> *runq = GO_ZG(runq);
     for(;;){
         {
             unique_lock<mutex> lock(this->queue_mu);
 
             auto res = this->cond.wait_for(lock,chrono::seconds(1)) == cv_status::timeout;
-//            this->cond.wait(lock,[this,rq]{
-//                return this->stop || !this->tasks.empty() || !rq->q->isEmpty();
+//            this->cond.wait(lock,[this,runq]{
+//                return this->stop || !this->tasks.empty() || !runq->q->isEmpty();
 //            });
-            Debug("G event wait:%d stop:%d tasks.empty:%d q.isEmpty:%d",res,this->stop,this->tasks.empty(),rq->q->isEmpty());
-            if(this->stop || !this->tasks.empty() || !rq->q->isEmpty()){
+            Debug("G event wait:%d stop:%d tasks.empty:%d q.isEmpty:%d",res,this->stop,this->tasks.empty(),runq->empty());
+            if(this->stop || !this->tasks.empty() || !runq->empty()){
                 Debug("could get one g");
             }
             else{
                 continue;
             }
 
-            if(this->stop && this->tasks.empty() && rq->q->isEmpty()){
+            if(this->stop && this->tasks.empty() && runq->empty()){
                 break;
             }
 
@@ -99,7 +99,8 @@ void Proc::schedule()
                 this->tasks.pop();
                 co = static_cast<Coroutine *>(ctx->func_data);
             }else{
-                co = rq->q->pop();
+                co = move(runq->front());
+                runq->pop();
             }
         }
         if(co == nullptr){
@@ -123,7 +124,7 @@ void Proc::schedule()
         //G被切出来，重新进行调度
         else{
             Debug("coroutine yield: start put queue");
-            GO_ZG(rq)->q->put(co);
+            GO_ZG(runq)->push(co);
         }
         //获取本地队列去找到一个可运行的G
         runqget();
@@ -135,15 +136,16 @@ void Proc::schedule()
  */
 void Proc::runqget()
 {
-    Runq *rq = static_cast<Runq *>(GO_ZG(rq));
+    queue<Coroutine*> *runq = GO_ZG(runq);
     Coroutine *co;
-    while(!rq->q->isEmpty()){
-        co = rq->q->pop();
+    while(!runq->empty()){
+        co = move(runq->front());
+        runq->pop();
         co->resume();
         if(co->ctx->is_end){
             co->close();
         }else{
-            rq->q->put(co);
+            runq->push(co);
             break;
         }
     }

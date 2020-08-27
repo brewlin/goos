@@ -4,7 +4,6 @@
 #include <mutex>
 #include <queue>
 #include "php_go.h"
-#include "QList.h"
 using namespace std;
 
 class Coroutine;
@@ -34,18 +33,6 @@ public:
     zval*                    copy_literals(zval *old, int last);
     static void              freehash(zval* zval_ptr);
 };
-
-
-class Freeq
-{
-public:
-    Freeq(){func_list = new QList<ZendFunction*>();}
-    ~Freeq(){if(func_list) delete func_list;}
-    mutex gofq_lock;
-    QList<ZendFunction*> *func_list;
-};
-
-
 
 
 #endif //GO_ZENDFUNCTION_H

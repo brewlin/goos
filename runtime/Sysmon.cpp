@@ -113,7 +113,7 @@ void Sysmon::monitor()
             Debug("mid:%ld G:%ld _g:%d _glock:%ld",m.tid,m.G,m.G->_g,m.G->_glock);
             if(m.G->_g != nullptr){
                 preemptM(&m);
-            }else if(proc->tasks.empty() && m.G->rq->q->isEmpty()){
+            }else if(proc->tasks.empty() && m.G->runq->empty()){
                 total_n ++;
             }else{
                 proc->cond.notify_one();

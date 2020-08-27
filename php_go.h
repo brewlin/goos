@@ -8,11 +8,8 @@
 #include "ext/standard/info.h"
 #include "php_network.h"
 #include "php_streams.h"
-
 #include "php_globals.h"
 #include "php_main.h"
-
-
 #include "TSRM.h"
 #include "zend_variables.h"
 #include "zend_interfaces.h"
@@ -28,30 +25,30 @@ using timep = chrono::steady_clock::time_point;
 extern zend_module_entry go_module_entry;
 extern zend_class_entry *go_coroutine_ce_ptr;
 
-class Freeq;
-class Stackq;
 class Coroutine;
-class Runq;
 ZEND_EXTERN_MODULE_GLOBALS(go)
 #ifndef GO_ZG
 ZEND_BEGIN_MODULE_GLOBALS(go)
-    Stackq*     free_stack;
-    Freeq*      q;
-    Runq*       rq;
-    pid_t       pid;
-    int         signal;
-    void***     local;
+    queue<Coroutine*>* free_stack;
+    queue<Coroutine*>* runq;
+    pid_t              pid;
+    int                signal;
+    void***            local;
     //执行抢占标记检测
-    timep       schedwhen;
-    int         schedtick;
-    zval        _this;
-    Coroutine*  _g;
-    mutex*      _glock;
-    HashTable   resolve;
-    HashTable   filenames;
-    HashTable*  resources;
-    int         hard_copy_interned_strings;
+    timep              schedwhen;
+    int                schedtick;
+    zval               _this;
+    Coroutine*         _g;
+    mutex*             _glock;
+    HashTable          resolve;
+    HashTable          filenames;
+    HashTable*         resources;
+    int                hard_copy_interned_strings;
 ZEND_END_MODULE_GLOBALS(go)
+
+/**
+ * MACRO FETCH TSRM
+ */
 #   define FETCH_CTX(ls, id, type, element) (((type) (*((void ***) ls))[TSRM_UNSHUFFLE_RSRC_ID(id)])->element)
 #   define FETCH_CTX_ALL(ls, id, type) ((type) (*((void ***) ls))[TSRM_UNSHUFFLE_RSRC_ID(id)])
 #   define GO_CG(ls, v) FETCH_CTX(ls, compiler_globals_id, zend_compiler_globals*, v)

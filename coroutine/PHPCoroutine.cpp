@@ -1,6 +1,7 @@
 #include "PHPCoroutine.h"
 #include "Coroutine.h"
 #include "ZendFunction.h"
+#include <queue>
 
 /**
  * 创建一个协程G运行
@@ -12,10 +13,21 @@ long PHPCoroutine::go(zend_function *func,zval *argv,uint32_t argc)
     ZendFunction *call = new ZendFunction(func,argv,argc);
     Coroutine *ctx;
     //TODO:在主线程时 无本地队列！
-    if(!GO_ZG(free_stack)->q->isEmpty()){
-        ctx = GO_ZG(free_stack)->get_one();
+
+    queue<Coroutine*> *q = GO_ZG(free_stack);
+    cout << "q:" << q << " size:" << q->size() <<endl;
+    if(!q->empty()){
+        cout << "fetch" <<endl;
+        ctx = move(q->front());
+        q->pop();
+        //格式化php栈
+        memset(ctx->php_stack,0,DEFAULT_PHP_STACK_PAGE_SIZE);
+        //格式化c栈
+        memset(ctx->ctx->bp,0,DEFAULT_STACK);
+        ctx->ctx->reset();
         ctx->callback = call;
     }else{
+        cout << "new" <<endl;
         ctx = new Coroutine(run, call);
     }
     return ctx->run();

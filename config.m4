@@ -44,7 +44,7 @@ if test "$PHP_GO" != "no"; then
     PHP_ADD_INCLUDE([$ext_srcdir/runtime])
     PHP_ADD_INCLUDE([$ext_srcdir/runtime/asm])
 
-    PHP_INSTALL_HEADERS([ext/go], [*.h lib/*.h config.h coroutine/*.h runtime/*.h])
+    PHP_INSTALL_HEADERS([ext/go], [*.h config.h coroutine/*.h runtime/*.h])
     PHP_ADD_MAKEFILE_FRAGMENT
 
     PHP_REQUIRE_CXX()

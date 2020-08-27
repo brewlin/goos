@@ -127,7 +127,7 @@ void Coroutine::close()
     zend_vm_stack stack = EG(vm_stack);
 //    free(stack);
     php_stack = stack;
-    GO_ZG(free_stack)->q->put(this);
+    GO_ZG(free_stack)->push(this);
     restore_stack(&main_stack);
 //    delete ctx;
 //    delete this;
