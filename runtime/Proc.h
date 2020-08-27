@@ -31,27 +31,29 @@ struct M
     }
 };
 
-
+class ZendFunction;
 class Proc
 {
 public:
     Proc(size_t threads);
     ~Proc();
-    void                gogo(Context *ctx);
-    void                preapre_start();
-    void                schedule();
-    void                prepare_shutdown();
-    static void         free_func();
-    void                runqget();
-public:
-    size_t              threads;
-    size_t              start_threads = 0;
-    condition_variable  cond;
-    queue<Context *>    tasks;
-    time_point          now;
-    bool                ready;
+//    void                    gogo(ZendFunction *call);
+    void                    gogo(Context *ctx);
+    void                    preapre_start();
+    void                    schedule();
+    void                    prepare_shutdown();
+    static void             free_func();
+    void                    runqget();
+
+    size_t                  threads;
+    size_t                  start_threads = 0;
+    condition_variable      cond;
+    queue<Context *>        tasks;
+    time_point              now;
+    bool                    ready;
+
 private:
-    vector<thread>      workers;
+    vector<thread>          workers;
     mutex queue_mu;
     bool stop;
 

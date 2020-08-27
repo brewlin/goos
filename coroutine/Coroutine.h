@@ -27,16 +27,17 @@ public:
     ZendFunction*                           callback;
     int                                     gstatus = Gidle;
     void*                                   php_stack = nullptr;
-public:
+
     Coroutine(run_func func,ZendFunction *args);
     ~Coroutine();
-    long run();
-    void close();
-    void newproc();
-    void yield();
-    void resume();
-    void restore_stack(php_sp *sp);
-    void stackpreempt();
+    long                                    run();
+    void                                    close();
+    void                                    newproc();
+    void                                    yield();
+    void                                    resume();
+    void                                    restore_stack(php_sp *sp);
+    void                                    stackpreempt();
+    static Coroutine*                       getg(ZendFunction* fn);
 
 };
 

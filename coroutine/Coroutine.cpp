@@ -12,13 +12,40 @@ Coroutine::Coroutine(run_func func,ZendFunction *args)
     creator = (void***)tsrm_get_ls_cache();
 }
 /**
+ * 获取一个G
+ * 1. 从本地空闲free_stack中获取一个
+ * 2. 没有空闲的则new一个新的G
+ * @return Corouine*
+ */
+Coroutine* Coroutine::getg(ZendFunction* fn)
+{
+    Coroutine *co;
+    queue<Coroutine*> *free = GO_ZG(free_stack);
+    Debug("get g free_list:%x size:%ld",free,free->size());
+    if(!free->empty()){
+        Debug("fetch from free_list");
+        co = move(free->front());
+        free->pop();
+        //格式化php栈
+        memset(co->php_stack,0,DEFAULT_PHP_STACK_PAGE_SIZE);
+        //格式化c栈
+        memset(co->ctx->bp,0,DEFAULT_STACK);
+        co->ctx->reset();
+        co->callback = fn;
+    }else{
+        Debug("get g by new one");
+        co = new Coroutine(PHPCoroutine::run,fn);
+    }
+    return co;
+}
+/**
  * 投递到调度到其他线程CPU中去执行
  * @return
  */
 long Coroutine::run()
 {
     Debug("G run: start push g to global queue g:%x ctx:%x", this, ctx);
-    //投递到 proc 线程去执行该协程
+//    投递到 proc 线程去执行该协程
     if(proc == nullptr){
         cout << "未初始化线程" <<endl;
         throw "未初始化线程";
@@ -36,7 +63,6 @@ void Coroutine::yield()
     Debug("yield G: g:%ld",this);
     PHPCoroutine::save_stack(&main_stack);
     restore_stack(stack);
-
     {
 //        unique_lock <mutex> lock(*GO_ZG(_glock));
         Debug("_glock:%ld",GO_ZG(_glock));

@@ -37,9 +37,11 @@ extern char error[ERROR_MSG_SIZE];
         Log::put(LOG_WARNING_D, error);
 
     #define Error(str, ...)                                                         \
+        {\
         snprintf(error, ERROR_MSG_SIZE, "%s: " str " in %s on line %d.", __func__, ##__VA_ARGS__, __FILE__, __LINE__); \
         Log::put(LOG_ERROR_D, error); \
-        exit(-1);
+        exit(-1);\
+        }
 #else
     #define Debug(str,...)
     #define Trace(str,...)

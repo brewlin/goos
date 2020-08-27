@@ -1,6 +1,7 @@
 #include "Coroutine.h"
 #include "PHPCoroutine.h"
 #include "php_go.h"
+#include "Log.h"
 PHP_METHOD(coroutine,status)
 {
     if(GO_ZG(_g) == nullptr){
@@ -19,6 +20,7 @@ PHP_FUNCTION(go_yield)
 }
 PHP_FUNCTION(go_create)
 {
+    Debug("go create");
     zend_fcall_info fci = empty_fcall_info;
     zend_fcall_info_cache fcc = empty_fcall_info_cache;
     //1 -1 可变参数
