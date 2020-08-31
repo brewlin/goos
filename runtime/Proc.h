@@ -37,8 +37,8 @@ class Proc
 public:
     Proc(size_t threads);
     ~Proc();
-//    void                    gogo(ZendFunction *call);
-    void                    gogo(Context *ctx);
+    void                    gogo(ZendFunction *call);
+//    void                    gogo(Context *ctx);
     void                    preapre_start();
     void                    schedule();
     void                    prepare_shutdown();
@@ -48,7 +48,8 @@ public:
     size_t                  threads;
     size_t                  start_threads = 0;
     condition_variable      cond;
-    queue<Context *>        tasks;
+//    queue<Context *>        tasks;
+    queue<ZendFunction *>        tasks;
     time_point              now;
     bool                    ready;
 

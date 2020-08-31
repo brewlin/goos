@@ -11,13 +11,14 @@
 long PHPCoroutine::go(zend_function *func,zval *argv,uint32_t argc)
 {
     ZendFunction *call = new ZendFunction(func,argv,argc);
-    Coroutine* ctx = Coroutine::getg(call);
-    if(ctx){
-        GO_ZG(runq)->push(ctx);
-        return 1;
-    }
-    ctx = new Coroutine(run,call);
-    proc->gogo(ctx->ctx);
+//    Coroutine* ctx = Coroutine::getg(call);
+//    if(ctx){
+//        GO_ZG(runq)->push(ctx);
+//        return 1;
+//    }
+//    ctx = new Coroutine(run,call);
+//    proc->gogo(ctx->ctx);
+    proc->gogo(call);
     //    return ctx->run();
     return 1;
 }

@@ -13,11 +13,21 @@ void ZendFunction::freehash(zval *zval_ptr)
 //    }
     zval_ptr_dtor(zval_ptr);
 }
+/**
+ *
+ * @param func
+ * @param argv
+ * @param argc
+ */
 ZendFunction::ZendFunction(zend_function *func,zval *argv,uint32_t argc):argv(argv),argc(argc),is_new(1)
 {
     arena_checkpoint = zend_arena_checkpoint(CG(arena));;
     this->func = copy_function(func);
+    creator = (void***)tsrm_get_ls_cache();
 }
+/**
+ * free all the env
+ */
 ZendFunction::~ZendFunction()
 {
     zend_op_array *op = &func->op_array;

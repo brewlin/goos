@@ -9,12 +9,11 @@ Coroutine::Coroutine(run_func func,ZendFunction *args)
 {
     callback = args;
     ctx = new Context(func,static_cast<void *>(this));
-    creator = (void***)tsrm_get_ls_cache();
+    creator = args->creator;
 }
 /**
  * 获取一个G
- * 1. 从本地空闲free_stack中获取一个
- * 2. 没有空闲的则new一个新的G
+ * 从本地空闲free_stack中获取一个
  * @return Corouine*
  */
 Coroutine* Coroutine::getg(ZendFunction* fn)
@@ -32,7 +31,11 @@ Coroutine* Coroutine::getg(ZendFunction* fn)
         co->ctx->reset();
         co->callback = fn;
         co->gstatus = Gidle;
+        co->creator = fn->creator;
+    }else{
+        co = new Coroutine(PHPCoroutine::run,fn);
     }
+    co->gstatus = Gidle;
     return co;
 }
 /**
@@ -43,8 +46,8 @@ long Coroutine::run()
 {
     Debug("G run: start push g to global queue g:%x ctx:%x", this, ctx);
 //    投递到 proc 线程去执行该协程
-    if(proc == nullptr)Error("proc not init");
-    proc->gogo(ctx);
+//    if(proc == nullptr)Error("proc not init");
+//    proc->gogo(ctx);
     return 1;
 }
 /**

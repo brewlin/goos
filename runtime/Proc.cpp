@@ -12,7 +12,7 @@ vector<M> allm;
  * 投递一个协程给多个线程调度执行
  * @param ctx
  */
-void Proc::gogo(Context* ctx)
+void Proc::gogo(ZendFunction* ctx)
 {
     assert(!stop);
     unique_lock<mutex> lock(queue_mu);
@@ -72,8 +72,8 @@ void Proc::prepare_shutdown()
  */
 void Proc::schedule()
 {
-    Context*   ctx;
-    Coroutine* co;
+    Coroutine*    co;
+    ZendFunction* fn;
     queue<Coroutine*> *runq = GO_ZG(runq);
     for(;;){
         {
@@ -86,9 +86,9 @@ void Proc::schedule()
                 else continue;
 
             if(!this->tasks.empty()){
-                ctx = move(this->tasks.front());
+                fn = move(this->tasks.front());
                 this->tasks.pop();
-                co = static_cast<Coroutine *>(ctx->func_data);
+                co = Coroutine::getg(fn);
             }else{
                 co = move(runq->front());
                 runq->pop();
@@ -104,7 +104,7 @@ void Proc::schedule()
         //恢复被暂停的G
         else co->resume();
         //G运行结束 销毁栈
-        if(ctx->is_end)
+        if(co->ctx->is_end)
         {
             Debug("coroutine end: start close");
             co->close();

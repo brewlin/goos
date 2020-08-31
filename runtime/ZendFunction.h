@@ -18,6 +18,7 @@ public:
     zval                            *argv;
     uint32_t                        argc;
     int                             is_new = 0;
+    void***                         creator;
 public:
     ZendFunction(zend_function *func,zval *argv,uint32_t argc);
     ~ZendFunction();
