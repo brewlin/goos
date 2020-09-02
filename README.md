@@ -38,13 +38,13 @@ GPM 多线程协程调度器 for PHP Extension
 ```php
 <?php
 Runtime::GOMAXPROCS(10);
+$ref = ["ref"];
 for($i = 0;$i <100; $i++)
 {
-    go(function()use($i){
+    //support reference params
+    go(function()use($i,&$ref){
        go(function(){
-            //echo "go yield  \n";
-            //goyield();
-            //echo "go end \n";
+           var_dump($i,$ref);
        });
     });
 }

@@ -95,10 +95,10 @@ void Proc::schedule()
             }
         }
         if(co == nullptr){
-            Debug("co exception:%ld",co);
+            Debug("co exception:%x",co);
             continue;
         }
-        Debug("get one G: %ld",co);
+        Debug("get one G: %x",co);
         //当前线程分配到一个未初始化的G
         if(co->gstatus == Gidle) co->newproc();
         //恢复被暂停的G

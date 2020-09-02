@@ -19,7 +19,7 @@ void Sysmon::sighandler(int signo)
     lock.lock();
     Coroutine *co = GO_ZG(_g);
     if(co == nullptr)return;
-    Debug("receive signal:%d _g:%ld co->status:%d Grunnable:%d",signo,co,co->gstatus,Grunnable);
+    Debug("receive signal:%d _g:%x co->status:%d Grunnable:%d",signo,co,co->gstatus,Grunnable);
     //判断当前G是否状态正常
     if(co->gstatus == Grunnable){
         //抢占切出
@@ -53,7 +53,7 @@ void Sysmon::preemptPark(M *m)
     Coroutine *co  = GO_FETCH(m->_m,_g);
     //发起抢占前判断G是否正常
     if(co == nullptr)return;
-    Debug("start park preempt: _g:%ld co->gstatus:%d Grunnable:%d",co,co->gstatus,Grunnable);
+    Debug("start park preempt: _g:%x co->gstatus:%d Grunnable:%d",co,co->gstatus,Grunnable);
     if(co->gstatus == Grunnable){
         Debug("start send signal:%d",SIGURG);
         pthread_kill(m->tid, SIGURG);
@@ -69,7 +69,7 @@ void Sysmon::preemptM(M *m)
 {
     //检查周期是否一致
     if(m->tick != m->G->schedtick){
-        Debug("period not consistent m:%ld",m->tid);
+        Debug("period not consistent m:%x",m->tid);
         m->tick = m->G->schedtick;
         return;
     }
@@ -110,7 +110,7 @@ void Sysmon::monitor()
                 Debug("not get lock");
                 continue;
             }
-            Debug("mid:%ld G:%ld _g:%d _glock:%ld",m.tid,m.G,m.G->_g,m.G->_glock);
+            Debug("mid:%x G:%x _g:%d _glock:%x",m.tid,m.G,m.G->_g,m.G->_glock);
             if(m.G->_g != nullptr){
                 preemptM(&m);
             }else if(proc->tasks.empty() && m.G->runq->empty()){

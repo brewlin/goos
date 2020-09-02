@@ -7,10 +7,15 @@
 void ZendFunction::freehash(zval *zval_ptr)
 {
 
-//    if(Z_TYPE_P(zval_ptr) == IS_NULL){
-//        cout << "该变量为 null" <<endl;
-//        return;
-//    }
+    Debug("zend_hash_destory: zval:%x type:%d",zval_ptr,Z_TYPE_P(zval_ptr));
+    if(Z_TYPE_P(zval_ptr) == IS_NULL) {
+        return;
+    }
+    if(Z_TYPE_P(zval_ptr) == IS_REFERENCE) {
+        int gccount = GC_REFCOUNT(Z_REF_P(zval_ptr));
+        Debug("reference gc count:%d",gccount);
+        return;
+    }
     zval_ptr_dtor(zval_ptr);
 }
 /**
@@ -60,15 +65,15 @@ void ZendFunction::prepare_functions(Coroutine *co) {
     void *value = NULL,*prepared = NULL;
     //TODO: need handle it,could crash
     zend_compiler_globals* cg = ((zend_compiler_globals *) (*((void ***) co->creator))[TSRM_UNSHUFFLE_RSRC_ID(compiler_globals_id)]);
-    Debug("creator:%ld cgid:%ld cg:%ld null:%d",co->creator,compiler_globals_id,cg,cg== nullptr);
+    Debug("creator:%x cgid:%ld cg:%x null:%d",co->creator,compiler_globals_id,cg,cg== nullptr);
     if(cg == nullptr){
         cg = ((zend_compiler_globals *) (*((void ***) co->creator))[TSRM_UNSHUFFLE_RSRC_ID(compiler_globals_id)]);
-        Error("creator thread local not exist cg:%ld",cg);
+        Error("creator thread local not exist cg:%x",cg);
         return;
     }
     HashTable *function_table = cg->function_table;
     HashTable *local_table    = CG(function_table);
-    Debug("origin:%ld local:%ld",function_table,local_table)
+    Debug("origin:%x local:%x",function_table,local_table)
     ZEND_HASH_FOREACH_STR_KEY_PTR(function_table, key, value)
     {
         if (((zend_function*)value)->type == ZEND_INTERNAL_FUNCTION ||
@@ -77,7 +82,7 @@ void ZendFunction::prepare_functions(Coroutine *co) {
         name = zend_string_new(key);
         prepared = copy_function((zend_function*)value);
         if (!zend_hash_add_ptr(local_table, name, prepared)) {
-            Debug("function table add failed: %ld",local_table)
+            Debug("function table add failed: %x",local_table)
             destroy_op_array((zend_op_array*)prepared);
         }
 
@@ -109,6 +114,7 @@ zend_function* ZendFunction::copy_user_function(zend_function *function)
 {
     zend_function  *copy;
     zend_op_array  *op_array;
+    zend_op_array  *old_op_array;
     zend_string   **variables, *filename_copy;
     zval           *literals;
     zend_arg_info  *arg_info;
@@ -120,6 +126,7 @@ zend_function* ZendFunction::copy_user_function(zend_function *function)
     variables = op_array->vars;
     literals = op_array->literals;
     arg_info = op_array->arg_info;
+    old_op_array = (zend_op_array*)function;
 
 //    op_array->function_name = zend_string_new(op_array->function_name);
     op_array->function_name = ZendString::copy_string(op_array->function_name,is_new);
@@ -154,7 +161,9 @@ zend_function* ZendFunction::copy_user_function(zend_function *function)
     if (op_array->live_range)		op_array->live_range = copy_live(op_array->live_range, op_array->last_live_range);
     if (op_array->try_catch_array)  op_array->try_catch_array = copy_try(op_array->try_catch_array, op_array->last_try_catch);
     if (op_array->vars) 		op_array->vars = copy_variables(variables, op_array->last_var);
-    if (op_array->static_variables) op_array->static_variables = copy_statics(op_array->static_variables);
+//    if (op_array->static_variables) op_array->static_variables = copy_statics(op_array->static_variables);
+    if (op_array->static_variables) op_array->static_variables = copy_statics(old_op_array->static_variables);
+//    op_array->static_variables = old_op_array->static_variables;
 
     return copy;
 }
@@ -201,8 +210,12 @@ HashTable* ZendFunction::copy_statics(HashTable *old) {
         ZEND_HASH_FOREACH_STR_KEY_VAL(old, key, value) {
             zend_string *name = zend_string_new(key);
             zval *next = value;
-            while (Z_TYPE_P(next) == IS_REFERENCE)
-                next = &Z_REF_P(next)->val;
+//            while (Z_TYPE_P(next) == IS_REFERENCE)
+//                next = &Z_REF_P(next)->val;
+            if(Z_TYPE_P(next) == IS_REFERENCE){
+                zend_hash_add(statics, name, next);
+                continue;
+            }
 
             if (Z_REFCOUNTED_P(next)) {
                 zval copy;
