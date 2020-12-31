@@ -5,7 +5,9 @@
  <a href="https://github.com/brewlin/goos/blob/master/LICENSE"><img alt="GitHub license" src="https://img.shields.io/github/license/brewlin/goos"></a>
  </p>
 
-GPM 多线程协程调度器 for PHP Extension,`NOTICE`:因为TSRM线程隔离使变量共享变得复杂和低效，目前仅作为学习目的
+GPM 多线程协程调度器 for PHP Extension
+
+`NOTICE`:TSRM 使变量共享变得复杂和低效，目前仅作为学习目的
 ## process
 - [x] php环境线程隔离，协程隔离
 - [x] 实现G-M调度,任意协程G创建后，自动绑定到线程M上去执行
