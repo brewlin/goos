@@ -7,7 +7,7 @@
 
 GPM 多线程协程调度器 for PHP Extension
 
-`NOTICE`:TSRM 使变量共享变得复杂和低效，目前仅作为学习目的
+`NOTICE`:TSRM 使变量共享变得复杂和低效，目前仅用于学习研究
 ## process
 - [x] php环境线程隔离，协程隔离
 - [x] 实现G-M调度,任意协程G创建后，自动绑定到线程M上去执行
